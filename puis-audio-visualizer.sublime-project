@@ -1,0 +1,26 @@
+{
+    "folders":
+    [
+        {
+            "path": "./puis-audio-visualizer/src",
+            "name" : "Source",
+            "folder_exclude_patterns": ["./puis-audio-visualizer/src/assets"],
+            "follow_symlinks": true
+        },
+        {
+            "path": "./puis-audio-visualizer/e2e",
+            "name": "End-to-end Test"
+        }
+    ],
+    "settings":
+    {
+        "tab_size": 4
+    },
+    "build_systems":
+    [
+        {
+            "name": "List",
+            "shell_cmd": "ls -l"
+        }
+    ]
+}
