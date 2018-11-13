@@ -4,12 +4,12 @@ import { FormsModule } from '@angular/forms';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { ToastsComponent } from './toasts/toasts.component';
+import { VisualizerContainerComponent } from './visualizer-container/visualizer-container.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    ToastsComponent
+    VisualizerContainerComponent
   ],
   imports: [
     BrowserModule,
