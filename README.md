@@ -2,8 +2,6 @@
 Audio visualizer for principles of UI software.
 
 ## UI Design Images
-[[https://raw.githubusercontent.com/ddias3/UI-AudioVisualizer/master/ui_design.png|alt=main_ui_design]]
-[[https://raw.githubusercontent.com/ddias3/UI-AudioVisualizer/master/ui_design_individual.png|alt=individual_visualizer_design]]
 ![main UI design](https://raw.githubusercontent.com/ddias3/UI-AudioVisualizer/master/ui_design.png)
 ![individual visualizer design](https://raw.githubusercontent.com/ddias3/UI-AudioVisualizer/master/ui_design_individual.png)
 
