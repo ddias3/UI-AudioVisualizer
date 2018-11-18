@@ -1,6 +1,7 @@
 import { Component, HostListener, ViewChild, AfterViewInit, ElementRef } from '@angular/core';
 import * as THREE from 'three';
 
+// this is code from three.js that for some reason is inaccessible through the module import
 function mergeBufferAttributes( attributes ) {
 
     var TypedArray;
@@ -74,20 +75,25 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.scene = new THREE.Scene();
 
         var geometry = new THREE.BoxGeometry(0.4, 1, 3);
-        var material = new THREE.MeshLambertMaterial({ color: 0x12F34F });
+        var texture = new THREE.TextureLoader().load("../../assets/beam0.png");
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 4);
+        texture.format = THREE.RGBAFormat;
+
+        // https://stackoverflow.com/questions/17486614/three-js-png-texture-alpha-renders-as-white-instead-as-transparent
+        var material = new THREE.MeshLambertMaterial({
+            map : texture,
+            transparent : true,
+            opacity : 1.0,
+            color : 0x00FF00
+        });
         var cube = new THREE.Mesh(geometry, material);
-
-        // material = new THREE.LineBasicMaterial({ color: 0x0000FF });
-        // geometry = new THREE.Geometry();
-        // geometry.vertices.push(new THREE.Vector3(-5, 0, 0));
-        // geometry.vertices.push(new THREE.Vector3(0, 1, 0));
-        // geometry.vertices.push(new THREE.Vector3(5, 0, 0));
-
-        // var line = new THREE.Line(geometry, material);
 
         this.scene.add(cube);
         this.scene.add(new THREE.AxesHelper(5));
         this.scene.add(this.createCircle(1, 16));
+        this.scene.add(this.createLightning());
 
         this.testVisualizerCb = this.createTestVisualizer();
 
@@ -172,6 +178,96 @@ export class VisualizerContainerComponent implements AfterViewInit {
         return new THREE.Mesh(geometry, material);
     }
 
+    private createLightning() {
+        // I was going to implement the code brought forth by this StackOverflow post, but I've already wasted 4 hours
+        //   and have nothing to show for it, so I'm scrapping a texture on the flailing parts completely.
+        // https://stackoverflow.com/questions/20661941/how-to-map-texture-on-a-custom-non-square-quad-in-three-js
+        const resolution = 16;
+
+        const phi: number = 2 * Math.PI / resolution;
+
+        function createBasicShape(phi: number, distance0: number, distance1: number): Object {
+            const TR = {
+                x : Math.cos(phi) * 1.09 * distance1,
+                y : Math.sin(phi) * 1.09 * distance1
+            };
+            const TL = {
+                x : Math.cos(phi) * distance0,
+                y : Math.sin(phi) * distance0
+            };
+            const BR = {
+                x : 1.09 * distance1,
+                y : 0.0
+            };
+            const BL = {
+                x : distance0,
+                y : 0.0
+            };
+
+            var valueBuffer = new Float32Array([
+                BL.x, BL.y, 0.0, //distance0, 0.0, 0.0,
+                BR.x, BR.y, 0.0, //1.09 * distance1, 0.0, 0.0,
+                TR.x, TR.y, 0.0, //Math.cos(phi) * 1.09 * distance1, Math.sin(phi) * 1.09 * distance1, 0.0,
+
+                BL.x, BL.y, 0.0, //distance0, 0.0, 0.0,
+                TR.x, TR.y, 0.0, //Math.cos(phi) * 1.09 * distance1, Math.sin(phi) * 1.09 * distance1, 0.0,
+                TL.x, TL.y, 0.0, //Math.cos(phi) * distance0, Math.sin(phi) * distance0, 0.0
+            ]);
+            var topWidth = Math.sqrt(Math.pow(TR.x - TL.x, 2) + Math.pow(TR.y - TL.y, 2));
+            var bottomWidth = Math.sqrt(Math.pow(BR.x - BL.x, 2) + Math.pow(BR.y - BL.y, 2));
+            var ratio = topWidth / bottomWidth;
+
+            var UVs = [
+                new THREE.Vector2(0, ratio),
+                new THREE.Vector2(0, 0),
+                new THREE.Vector2(1.0, 0),
+                new THREE.Vector2(ratio, ratio)
+            ];
+
+            return {
+                "valueBuffer" : valueBuffer,
+                "topWidth" : topWidth,
+                "bottomWidth" : bottomWidth,
+                "ratio" : ratio
+            };
+        }
+
+        var geometry = new THREE.BufferGeometry();
+
+        var distances = Array.apply(null, Array(resolution)).map(() => 1.5);
+
+        var rotationMatrix = new THREE.Matrix4();
+        var verticesAttributes = [];
+
+        for (var n = 0; n < resolution; ++n) {
+            rotationMatrix.makeRotationZ(n * phi);
+
+            var verticesAttributeLocal = new THREE.BufferAttribute(createBasicShape(phi, distances[n], distances[(n + 1) % resolution])["valueBuffer"], 3);
+            rotationMatrix.applyToBufferAttribute(verticesAttributeLocal);
+
+            verticesAttributes.push(verticesAttributeLocal);
+        }
+
+        var verticesAttribute = mergeBufferAttributes(verticesAttributes);
+        geometry.addAttribute("position", verticesAttribute);
+
+        var texture = new THREE.TextureLoader().load("../../assets/beam0.png", undefined, undefined, function (error) { console.error(error); });
+
+        // https://stackoverflow.com/questions/17486614/three-js-png-texture-alpha-renders-as-white-instead-as-transparent
+        var material = new THREE.MeshBasicMaterial({
+            color : 0x00FF00,
+            side : THREE.FrontSide,
+            map : texture,
+            opacity : 1.0,
+            transparent : true
+        });
+
+        geometry.computeFaceNormals();
+        geometry.computeVertexNormals();
+
+        return new THREE.Mesh(geometry, material);
+    }
+
     private createLight() {
         var light = new THREE.PointLight(0xFFFFFF, 1, 1000);
         light.position.set(0, 10, -10);
@@ -180,6 +276,9 @@ export class VisualizerContainerComponent implements AfterViewInit {
         var light = new THREE.PointLight(0xFFFFFF, 1, 1000);
         light.position.set(0, 0, 10);
         this.scene.add(light);
+
+        var light = new THREE.AmbientLight(0x404040);
+        this.scene.add( light );
     }
 
     private createCamera() {
@@ -222,6 +321,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
     }
 
     public render() {
+            // The render call is what redraws the 3D scene
         this.renderer.render(this.scene, this.camera);
     }
 
