@@ -126,7 +126,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 radius : 2.6,
                 arcLength : 4.1 * Math.PI / 12,
                 displayThickness : 0.06,
-                resolution : 32,
+                resolution : 24,
                 rotationMultiplier : 1.25
             },
             {
@@ -138,7 +138,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 radius : 2.6,
                 arcLength : 2.5 * Math.PI / 12,
                 displayThickness : 0.05,
-                resolution : 32,
+                resolution : 24,
                 rotationMultiplier : 1.55
             },
             {
@@ -150,7 +150,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 radius : 1.8,
                 arcLength : 2.8 * Math.PI / 12,
                 displayThickness : 0.04,
-                resolution : 24,
+                resolution : 16,
                 rotationMultiplier : 1.9
             },
             {
@@ -162,7 +162,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 radius : 1.8,
                 arcLength : 1.5 * Math.PI / 12,
                 displayThickness : 0.04,
-                resolution : 24,
+                resolution : 12,
                 rotationMultiplier : 2.3
             },
             {
@@ -174,7 +174,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 radius : 1.25,
                 arcLength : 1.2 * Math.PI / 12,
                 displayThickness : 0.04,
-                resolution : 16,
+                resolution : 10,
                 rotationMultiplier : 2.75
             },
             {
@@ -198,7 +198,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 radius : 0.8,
                 arcLength : 0.62 * Math.PI / 12,
                 displayThickness : 0.05,
-                resolution : 10,
+                resolution : 8,
                 rotationMultiplier : 3.6
             },
             {
@@ -210,7 +210,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 radius : 0.8,
                 arcLength : 0.54 * Math.PI / 12,
                 displayThickness : 0.05,
-                resolution : 8,
+                resolution : 4,
                 rotationMultiplier : 4.0
             },
             {
@@ -222,7 +222,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 radius : 0.42,
                 arcLength : 0.48 * Math.PI / 12,
                 displayThickness : 0.06,
-                resolution : 6,
+                resolution : 4,
                 rotationMultiplier : 4.5
             },
             {
@@ -234,7 +234,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 radius : 0.42,
                 arcLength : 0.45 * Math.PI / 12,
                 displayThickness : 0.06,
-                resolution : 4,
+                resolution : 3,
                 rotationMultiplier : 5.0
             }
         ]
