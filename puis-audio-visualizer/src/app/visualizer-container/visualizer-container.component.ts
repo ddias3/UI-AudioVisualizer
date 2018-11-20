@@ -96,125 +96,159 @@ export class VisualizerContainerComponent implements AfterViewInit {
             {
                 step : 6.0 * Math.PI / 12 + 0.2,
                 wave : this.waveFunc,
-                amplitude : 0.72,
+                amplitude : 1.0,
+                // amplitude : 0.72,
                 startAngle : null,
                 radius : 3.6,
                 arcLength : 6.6 * Math.PI / 12,
                 displayThickness : 0.08,
-                resolution : 32
+                resolution : 32,
+                rotationMultiplier : 1.0
             },
             {
                 step : 2.8 * Math.PI / 12 - 0.04,
                 wave : this.waveFuncNeg,
-                amplitude : 0.56,
+                amplitude : 0.84,
+                // amplitude : 0.56,
                 startAngle : null,
                 radius : 3.6,
                 arcLength : 2.8 * Math.PI / 12,
                 displayThickness : 0.07,
-                resolution : 32
+                resolution : 32,
+                rotationMultiplier : 1.1
             },
             {
                 step : 4.1 * Math.PI / 12 - 0.12,
                 wave : this.waveFunc,
-                amplitude : 0.48,
+                amplitude : 0.76,
+                // amplitude : 0.48,
                 startAngle : null,
                 radius : 2.6,
                 arcLength : 4.1 * Math.PI / 12,
                 displayThickness : 0.06,
-                resolution : 32
+                resolution : 32,
+                rotationMultiplier : 1.25
             },
             {
                 step : 2.5 * Math.PI / 12,
                 wave : this.waveFuncNeg,
-                amplitude : 0.42,
+                amplitude : 0.70,
+                // amplitude : 0.42,
                 startAngle : null,
                 radius : 2.6,
                 arcLength : 2.5 * Math.PI / 12,
                 displayThickness : 0.05,
-                resolution : 32
+                resolution : 32,
+                rotationMultiplier : 1.55
             },
             {
                 step : 2.8 * Math.PI / 12,
                 wave : this.waveFunc,
-                amplitude : 0.45,
+                amplitude : 0.73,
+                // amplitude : 0.45,
                 startAngle : null,
                 radius : 1.8,
                 arcLength : 2.8 * Math.PI / 12,
                 displayThickness : 0.04,
-                resolution : 24
+                resolution : 24,
+                rotationMultiplier : 1.9
             },
             {
                 step : 1.5 * Math.PI / 12,
                 wave : this.waveFuncNeg,
-                amplitude : 0.32,
+                amplitude : 0.60,
+                // amplitude : 0.32,
                 startAngle : null,
                 radius : 1.8,
                 arcLength : 1.5 * Math.PI / 12,
                 displayThickness : 0.04,
-                resolution : 24
+                resolution : 24,
+                rotationMultiplier : 2.3
             },
             {
                 step : 1.2 * Math.PI / 12,
                 wave : this.waveFunc,
-                amplitude : 0.3,
+                amplitude : 0.58,
+                // amplitude : 0.3,
                 startAngle : null,
                 radius : 1.25,
                 arcLength : 1.2 * Math.PI / 12,
                 displayThickness : 0.04,
-                resolution : 16
+                resolution : 16,
+                rotationMultiplier : 2.75
             },
             {
                 step : 0.85 * Math.PI / 12,
                 wave : this.waveFuncNeg,
-                amplitude : 0.27,
+                amplitude : 0.55,
+                // amplitude : 0.27,
                 startAngle : null,
                 radius : 1.25,
                 arcLength : 0.8 * Math.PI / 12,
                 displayThickness : 0.04,
-                resolution : 12
+                resolution : 12,
+                rotationMultiplier : 3.15
             },
             {
                 step : 0.7 * Math.PI / 12,
                 wave : this.waveFunc,
-                amplitude : 0.22,
+                amplitude : 0.50,
+                // amplitude : 0.22,
                 startAngle : null,
                 radius : 0.8,
                 arcLength : 0.62 * Math.PI / 12,
                 displayThickness : 0.05,
-                resolution : 10
+                resolution : 10,
+                rotationMultiplier : 3.6
             },
             {
                 step : 0.65 * Math.PI / 12,
                 wave : this.waveFuncNeg,
-                amplitude : 0.2,
+                amplitude : 0.48,
+                // amplitude : 0.2,
                 startAngle : null,
                 radius : 0.8,
                 arcLength : 0.54 * Math.PI / 12,
                 displayThickness : 0.05,
-                resolution : 8
+                resolution : 8,
+                rotationMultiplier : 4.0
             },
             {
                 step : 0.6 * Math.PI / 12,
                 wave : this.waveFunc,
-                amplitude : 0.19,
+                amplitude : 0.47,
+                // amplitude : 0.19,
                 startAngle : null,
                 radius : 0.42,
                 arcLength : 0.48 * Math.PI / 12,
                 displayThickness : 0.06,
-                resolution : 6
+                resolution : 6,
+                rotationMultiplier : 4.5
             },
             {
                 step : 0.8 * Math.PI / 12,
                 wave : this.waveFuncNeg,
-                amplitude : 0.12,
+                amplitude : 0.40,
+                // amplitude : 0.12,
                 startAngle : null,
                 radius : 0.42,
                 arcLength : 0.45 * Math.PI / 12,
                 displayThickness : 0.06,
-                resolution : 4
+                resolution : 4,
+                rotationMultiplier : 5.0
             }
         ]
     };
+    private AUDIO_NORMALIZATION = [
+            // Low Freq
+        250, 189, 180, 180,
+
+            // Mid Freq
+        170, 165, 166, 163,
+
+            // High Freq
+        155, 165, 180, 190
+    ];
 
     constructor() {
         this.render = this.render.bind(this);
@@ -315,7 +349,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 waves.push(freqWavesArray);
                 range(freq.step)
                     .map(startAngle => {
-                        var mesh = component.createWave(freq.wave, freqValues[index] * freq.amplitude, startAngle + rotation, freq.radius, freq.arcLength, freq.displayThickness, freq.resolution);
+                        var mesh = component.createWave(freq.wave, freqValues[index] * freq.amplitude, startAngle + (rotation * freq.rotationMultiplier), freq.radius, freq.arcLength, freq.displayThickness, freq.resolution);
                         freqWavesArray.push(mesh);
                         return mesh;
                     })
@@ -534,7 +568,9 @@ export class VisualizerContainerComponent implements AfterViewInit {
         var component = this;
 
         function testEQVisualizer() {
+            // let audio = new Audio("../../assets/FastVer01_stems_Bass.wav");
             let audio = new Audio("../../assets/ChaseMusic_mixAndMaster.mp3");
+            // let audio = new Audio("../../assets/01-White-Noise-10min.mp3");
             audio.load();
 
             var audioContext = new AudioContext();
@@ -546,28 +582,29 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
             analyser.fftSize = 512;
 
-            var bufferLength = analyser.frequencyBinCount;
-            var dataArray = new Uint8Array(bufferLength);
+            var dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-            console.log(bufferLength);
+            console.log(analyser.frequencyBinCount);
 
             audio.play();
 
             var rotation = 0.0;
 
             function updateVisualizer() {
-                rotation += 0.005;
+                rotation += 0.004;
                 analyser.getByteFrequencyData(dataArray);
 
-                var stepSize = Math.floor(bufferLength / 12);
+                var stepSize = Math.floor(analyser.frequencyBinCount / (component.AUDIO_NORMALIZATION.length + 4));
                 var freqValues = [];
 
-                for (var n = bufferLength - stepSize; n >= 0; n -= stepSize) {
-                    var value = dataArray[n];
-                    if (value <= 0.05)
-                        value = 0.05
-                    freqValues.push((value - 0.05) / (10 - 0.05) + 0.05);
+                for (var n = 0; n < component.AUDIO_NORMALIZATION.length; ++n) {
+                // for (var n = analyser.frequencyBinCount - stepSize; n >= 0; n -= stepSize) {
+                    var binIndex = n * stepSize;
+                    var value = dataArray[binIndex];
+                    freqValues.push(value / component.AUDIO_NORMALIZATION[n]);
                 }
+
+                console.log(freqValues);
 
                 component.testVisualizerCb(rotation, freqValues);
                 component.render();
