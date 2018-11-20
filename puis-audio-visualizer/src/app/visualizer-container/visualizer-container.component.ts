@@ -88,7 +88,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         },
         {
             radius : 0.42,
-            thickness : 0.04
+            thickness : 0.045
         }
     ];
     private WAVES = {
@@ -228,7 +228,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
             {
                 step : 0.8 * Math.PI / 12,
                 wave : this.waveFuncNeg,
-                amplitude : 0.40,
+                amplitude : 0.60,
                 // amplitude : 0.12,
                 startAngle : null,
                 radius : 0.42,
