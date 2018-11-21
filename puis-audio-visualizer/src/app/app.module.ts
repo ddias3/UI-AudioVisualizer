@@ -6,19 +6,24 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { VisualizerContainerComponent } from './visualizer-container/visualizer-container.component';
 import { InfoContainerComponent } from './info-container/info-container.component';
+import { AudioContainerComponent } from './audio-container/audio-container.component';
+import { VisualizerFactory } from './visualizers/visualizer';
 
 @NgModule({
   declarations: [
     AppComponent,
     VisualizerContainerComponent,
-    InfoContainerComponent
+    InfoContainerComponent,
+    AudioContainerComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     FormsModule
   ],
-  providers: [],
+  providers: [
+    VisualizerFactory
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
