@@ -25,6 +25,12 @@ export default class VisualizerEQ {
             });
             this.waves.push(freqWavesArray);
         });
+
+        this.waves.forEach(level => {
+            level.forEach(wave => {
+                wave.morphTargetInfluences[1] = 0.5 / 2.1;
+            });
+        });
     }
 
     public addToScene(scene: THREE.Scene): void {
@@ -58,8 +64,18 @@ export default class VisualizerEQ {
         if (normalizedFreqValues.length !== this.waves.length)
             throw new Error("Incompatible number of wave frequency values " + normalizedFreqValues.length);
 
+        for (var n = 0; n < this.waves.length; ++n) {
+            for (var m = 0; m < this.waves[n].length; ++m) {
+                this.waves[n][m].morphTargetInfluences[0] = normalizedFreqValues[n];
+            }
+        }
+    }
+
+    public setPosition(position: THREE.Vector3) {
+        for (var n = 0; n < this.circles.length; ++n)
+            this.circles[n].position.set(position.x, position.y, position.z);
         for (var n = 0; n < this.waves.length; ++n)
             for (var m = 0; m < this.waves[n].length; ++m)
-                this.waves[n][m].morphTargetInfluence[0] = normalizedFreqValues[n];
+                this.waves[n][m].position.set(position.x, position.y, position.z);
     }
 }

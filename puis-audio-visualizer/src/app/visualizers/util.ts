@@ -3,7 +3,7 @@ import * as THREE from "three";
 function createWave(waveFunc: Function, amplitude: number, startAngle: number, radius: number, arcLength: number, displayThickness: number = 0.02, resolution: number = 32): THREE.Mesh {
     const phi0 = 0;
     const phi1 = arcLength / resolution;
-    function createQuad(waveFuncVal0: number, waveFuncVal1: number) {
+    function createQuad(waveFuncVal0: number, waveFuncVal1: number, displayThickness: number) {
         const BL = {
             x : Math.cos(phi0) * (1.0 + (amplitude / radius) * waveFunc(waveFuncVal0)),
             y : Math.sin(phi0) * (0.0 + (amplitude / radius) * waveFunc(waveFuncVal0))
@@ -34,24 +34,45 @@ function createWave(waveFunc: Function, amplitude: number, startAngle: number, r
     var geometry = new THREE.BufferGeometry();
     var rotationMatrix = new THREE.Matrix4();
 
-    var verticesAttributes = [];
+    var verticesAttributes = {
+        orig : [],
+        maxHeight : [],
+        thin : []
+    };
 
     for (var n = 0; n < resolution; ++n) {
         rotationMatrix.makeRotationZ(n * phi1 + startAngle).scale(new THREE.Vector3(radius, radius, 1.0));
-        var verticesAttributeLocal = new THREE.BufferAttribute(createQuad(n / resolution, (n + 1) / resolution), 3);
 
-        rotationMatrix.applyToBufferAttribute(verticesAttributeLocal);
+            // original code
+        // var verticesAttributeLocal = new THREE.BufferAttribute(createQuad(n / resolution, (n + 1) / resolution), 3);
 
-        verticesAttributes.push(verticesAttributeLocal);
+        var verticesAttribute = {
+            orig      : new THREE.BufferAttribute(createQuad(             0,                    0, 2   * displayThickness), 3),
+            maxHeight : new THREE.BufferAttribute(createQuad(n / resolution, (n + 1) / resolution, 2   * displayThickness), 3),
+            thin      : new THREE.BufferAttribute(createQuad(             0,                    0, 0.1 * displayThickness), 3)
+        };
+
+        rotationMatrix.applyToBufferAttribute(verticesAttribute.orig);
+        rotationMatrix.applyToBufferAttribute(verticesAttribute.thin);
+        rotationMatrix.applyToBufferAttribute(verticesAttribute.maxHeight);
+
+        verticesAttributes.orig.push(verticesAttribute.orig);
+        verticesAttributes.maxHeight.push(verticesAttribute.maxHeight);
+        verticesAttributes.thin.push(verticesAttribute.thin);
     }
 
-    geometry.addAttribute("position", THREE.BufferGeometryUtils.mergeBufferAttributes(verticesAttributes));
+    geometry.addAttribute("position", THREE["BufferGeometryUtils"].mergeBufferAttributes(verticesAttributes.orig));
+    geometry.morphAttributes.position = [
+        THREE["BufferGeometryUtils"].mergeBufferAttributes(verticesAttributes.maxHeight),
+        THREE["BufferGeometryUtils"].mergeBufferAttributes(verticesAttributes.thin)
+    ];
 
     var material = new THREE.MeshBasicMaterial({
         transparent : true,
-        opacity : 0.8,
+        opacity : 0.6,
         color : 0x009000,
-        side : THREE.FrontSide
+        side : THREE.FrontSide,
+        morphTargets : true
     });
 
     geometry.computeFaceNormals();
@@ -94,12 +115,12 @@ function createCircle(size: number, thickness: number, resolution: number): THRE
         verticesAttributes.push(verticesAttributeLocal);
     }
 
-    var verticesAttribute = THREE.BufferGeometryUtils.mergeBufferAttributes(verticesAttributes);
+    var verticesAttribute = THREE["BufferGeometryUtils"].mergeBufferAttributes(verticesAttributes);
     geometry.addAttribute("position", verticesAttribute);
 
     var material = new THREE.MeshLambertMaterial({
         transparent : true,
-        opacity : 0.8,
+        opacity : 0.75,
         color : 0x00FF00,
         side : THREE.FrontSide
     });

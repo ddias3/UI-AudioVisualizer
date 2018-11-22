@@ -4,9 +4,11 @@ import * as THREE from "three";
 import * as util from "./util";
 import VisualizerEQ from "./equilizer";
 import VisualizerComp from "./compression";
+import VisualizerNoiseGate from "./noiseGate";
+import VisualizerIdentity from "./identity";
 
 // this is code from three.js that for some reason is inaccessible through the module import
-THREE.BufferGeometryUtils = {
+THREE["BufferGeometryUtils"] = {
     mergeBufferAttributes : function mergeBufferAttributes( attributes ) {
 
         var TypedArray;
@@ -59,5 +61,13 @@ export class VisualizerFactory {
 
     public comp() {
         return new VisualizerComp({}, {});
+    }
+
+    public noiseGate() {
+        return new VisualizerNoiseGate({});
+    }
+
+    public identity() {
+        return new VisualizerIdentity();
     }
 }

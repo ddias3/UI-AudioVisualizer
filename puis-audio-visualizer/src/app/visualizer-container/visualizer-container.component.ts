@@ -13,18 +13,19 @@ export class VisualizerContainerComponent implements AfterViewInit {
     innerWidth: any;
     innerHeight: any;
 
-    private pathCurve: THREE.CubicBezierCurve;
-
     private renderer: THREE.WebGLRenderer;
     private camera: THREE.PerspectiveCamera;
     public scene: THREE.Scene;
 
-    private testVisualizer;
+    private testVisualizer0;
+    private testVisualizer1;
 
     private visualizerFactory: VisualizerFactory;
 
     @ViewChild("visualizers")
     canvasRef: ElementRef;
+
+    private pathCurve: THREE.CubicBezierCurve3;
 
     private waveFunc = x => Math.sin(x * Math.PI);
     private waveFuncNeg = x => - 4*x + 4*x*x; // 1 - (2*x - 1) * (2*x - 1)
@@ -84,7 +85,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 arcLength : 2.8 * Math.PI / 12,
                 displayThickness : 0.07,
                 resolution : 32,
-                rotationMultiplier : 1.1
+                rotationMultiplier : -1.1
             },
             {
                 step : 4.1 * Math.PI / 12 - 0.12,
@@ -108,7 +109,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 arcLength : 2.5 * Math.PI / 12,
                 displayThickness : 0.05,
                 resolution : 24,
-                rotationMultiplier : 1.55
+                rotationMultiplier : -1.55
             },
             {
                 step : 2.8 * Math.PI / 12,
@@ -132,7 +133,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 arcLength : 1.5 * Math.PI / 12,
                 displayThickness : 0.04,
                 resolution : 12,
-                rotationMultiplier : 2.3
+                rotationMultiplier : -2.3
             },
             {
                 step : 1.2 * Math.PI / 12,
@@ -156,7 +157,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 arcLength : 0.8 * Math.PI / 12,
                 displayThickness : 0.04,
                 resolution : 12,
-                rotationMultiplier : 3.15
+                rotationMultiplier : -3.15
             },
             {
                 step : 0.7 * Math.PI / 12,
@@ -180,7 +181,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 arcLength : 0.54 * Math.PI / 12,
                 displayThickness : 0.05,
                 resolution : 4,
-                rotationMultiplier : 4.0
+                rotationMultiplier : -4.0
             },
             {
                 step : 0.6 * Math.PI / 12,
@@ -204,7 +205,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 arcLength : 0.45 * Math.PI / 12,
                 displayThickness : 0.06,
                 resolution : 3,
-                rotationMultiplier : 5.0
+                rotationMultiplier : -5.0
             }
         ]
     };
@@ -229,21 +230,33 @@ export class VisualizerContainerComponent implements AfterViewInit {
     }
 
     private createScene() {
-        var pathCurve = new THREE.CubicBezierCurve3(
+        this.pathCurve = new THREE.CubicBezierCurve3(
             new THREE.Vector3(-3, -2, -16),
             new THREE.Vector3(0, 0.75, -10),
             new THREE.Vector3(0, 0.75, 10),
             new THREE.Vector3(2, -2, 10),
         );
 
-        var line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pathCurve.getPoints(64)), new THREE.LineBasicMaterial({ color : 0xFFFFFF }));
+        var line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(this.pathCurve.getPoints(64)), new THREE.LineBasicMaterial({ color : 0xFFFFFF }));
 
         this.scene = new THREE.Scene();
         this.scene.add(new THREE.AxesHelper(8));
         this.scene.add(line);
 
-        this.testVisualizer = this.visualizerFactory.eq({}, this.CIRCLES, this.WAVES);
-        this.testVisualizer.addToScene(this.scene);
+        this.testVisualizer0 = this.visualizerFactory.eq({}, this.CIRCLES, this.WAVES);
+        this.testVisualizer0.addToScene(this.scene);
+        this.testVisualizer0.setPosition(new THREE.Vector3(0, 0, 0));
+        // this.testVisualizer0.setPosition(this.pathCurve.getPoint(0.5));
+
+        this.testVisualizer1 = this.visualizerFactory.identity();
+        this.testVisualizer1.addToScene(this.scene);
+        this.testVisualizer1.setPosition(new THREE.Vector3(0, 0, 0));
+        // this.testVisualizer1.setPosition(this.pathCurve.getPoint(0.5));
+
+        this.testVisualizer1.morphBars([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ]);
+        
+        this.testVisualizer1.testMorph(0.0);
     }
 
     private createLight() {
@@ -331,15 +344,15 @@ export class VisualizerContainerComponent implements AfterViewInit {
         var rotation = 0.0;
         var component = this;
 
-        function updateVisualizer() {
-            rotation += 0.004;
-            component.testVisualizer.rotate(0.004);
+        // function updateVisualizer() {
+        //     rotation += 0.004;
+        //     component.testVisualizer.rotate(0.004);
+        //     component.testVisualizer.morphWaves((new Array(12)).fill(Math.abs(component.waveFunc(rotation)), 0, 12));
+        //     component.render();
+        //     requestAnimationFrame(updateVisualizer);
+        // }
 
-            component.render();
-            requestAnimationFrame(updateVisualizer);
-        }
-
-        updateVisualizer();
+        // updateVisualizer();
 
         // playAudio();
 
@@ -347,57 +360,66 @@ export class VisualizerContainerComponent implements AfterViewInit {
         //                        6, 5, 4, 3, 2, 1,
         //                        6, 5, 4, 3].map(x => Math.random() * x));
 
-        // var component = this;
+        function testEQVisualizer() {
+            // let audio = new Audio("../../assets/FastVer01_stems_Bass.wav");
+            let audio = new Audio("../../assets/ChaseMusic_mixAndMaster.mp3");
+            // let audio = new Audio("../../assets/01-White-Noise-10min.mp3");
+            audio.load();
 
-        // function testEQVisualizer() {
-        //     // let audio = new Audio("../../assets/FastVer01_stems_Bass.wav");
-        //     let audio = new Audio("../../assets/ChaseMusic_mixAndMaster.mp3");
-        //     // let audio = new Audio("../../assets/01-White-Noise-10min.mp3");
-        //     audio.load();
+            var audioContext = new AudioContext();
+            var mediaElementSrc = audioContext.createMediaElementSource(audio);
+            var analyser = audioContext.createAnalyser();
 
-        //     var audioContext = new AudioContext();
-        //     var mediaElementSrc = audioContext.createMediaElementSource(audio);
-        //     var analyser = audioContext.createAnalyser();
+            mediaElementSrc.connect(analyser);
+            analyser.connect(audioContext.destination);
 
-        //     mediaElementSrc.connect(analyser);
-        //     analyser.connect(audioContext.destination);
+            analyser.fftSize = 512;
 
-        //     analyser.fftSize = 512;
+            var dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-        //     var dataArray = new Uint8Array(analyser.frequencyBinCount);
+            console.log(analyser.frequencyBinCount);
 
-        //     console.log(analyser.frequencyBinCount);
+            audio.play();
 
-        //     audio.play();
+            var rotation = 0.0;
 
-        //     var rotation = 0.0;
+            function updateVisualizer() {
+                rotation += 0.004;
+                analyser.getByteFrequencyData(dataArray);
 
-        //     function updateVisualizer() {
-        //         rotation += 0.004;
-        //         analyser.getByteFrequencyData(dataArray);
+                var stepSize = Math.floor(analyser.frequencyBinCount / (component.AUDIO_NORMALIZATION.length + 4));
+                var freqValues = [];
 
-        //         var stepSize = Math.floor(analyser.frequencyBinCount / (component.AUDIO_NORMALIZATION.length + 4));
-        //         var freqValues = [];
+                for (var n = 0; n < component.AUDIO_NORMALIZATION.length; ++n) {
+                // for (var n = analyser.frequencyBinCount - stepSize; n >= 0; n -= stepSize) {
+                    var binIndex = n * stepSize;
+                    var value = dataArray[binIndex];
+                    freqValues.push(value / component.AUDIO_NORMALIZATION[n]);
+                }
 
-        //         for (var n = 0; n < component.AUDIO_NORMALIZATION.length; ++n) {
-        //         // for (var n = analyser.frequencyBinCount - stepSize; n >= 0; n -= stepSize) {
-        //             var binIndex = n * stepSize;
-        //             var value = dataArray[binIndex];
-        //             freqValues.push(value / component.AUDIO_NORMALIZATION[n]);
-        //         }
+                component.testVisualizer0.rotate(0.004);
+                component.testVisualizer0.morphWaves(freqValues);
+                // component.testVisualizer.setPosition(component.pathCurve.getPoint(-0.5 * component.waveFunc(rotation * 0.5) + 0.5));
 
-        //         console.log(freqValues);
+                freqValues = [];
+                for (var n = 0; n < 32; ++n) {
+                    var binIndex = n * analyser.frequencyBinCount / 32;
+                    var value = dataArray[binIndex];
+                    freqValues.push(value / 250);
+                }
 
-        //         component.testVisualizerCb(rotation, freqValues);
-        //         component.render();
+                // component.testVisualizer1.morphBars(freqValues);
+                component.testVisualizer1.testMorph(0.5 * Math.sin(rotation) + 0.5);
 
-        //         requestAnimationFrame(updateVisualizer);
-        //     }
+                component.render();
 
-        //     updateVisualizer();
-        // }
+                requestAnimationFrame(updateVisualizer);
+            }
 
-        // testEQVisualizer();
+            updateVisualizer();
+        }
+
+        testEQVisualizer();
     }
 
     ngAfterViewInit() {
