@@ -39,7 +39,6 @@ export default class VisualizerIdentity {
         // }
 
         this.root = new THREE.Group();
-
         this.bars = [];
 
         var material = new THREE.MeshBasicMaterial({
@@ -54,67 +53,50 @@ export default class VisualizerIdentity {
             var geometryMin = new THREE.PlaneGeometry(0.22, 0.05);
             var geometryMax = new THREE.PlaneGeometry(0.22, 4);
 
+            geometryMin.applyMatrix(new THREE.Matrix4().makeTranslation(-3.9 + (n / 4), -2 + 0.05, 0));
+            geometryMax.applyMatrix(new THREE.Matrix4().makeTranslation(-3.9 + (n / 4), 0, 0));
+
             geometryMin.morphTargets.push({
                 name     : "max",
-                vertices : geometryMax.vertices.map(v => v.clone())
+                vertices : geometryMax.vertices
             });
 
             var plane = new THREE.Mesh(geometryMin, material);
-            plane.translateX(-3.9 + (n / 4));
-            plane.translateY(-2 + 0.05);
 
             this.root.add(plane);
             this.bars.push(plane);
         }
 
-        var testPlane = new THREE.PlaneGeometry(0.25, 4);
-        var testVertices = [];
-        for (var v = 0; v < testPlane.vertices.length; ++v) {
-            testVertices.push(testPlane.vertices[v].clone());
-            testVertices[v].x = 1;
-            testVertices[v].y = 1;
-            testVertices[v].z = 0;
-        }
-
-        testPlane.morphTargets.push({
-            name : "test",
-            vertices : testVertices
-        });
-
-        this.testPlane = new THREE.Mesh(testPlane, material);
-
-
                 // var testPlane = new THREE.PlaneGeometry(0.25, 4);
-        var testPlane = new THREE.BufferGeometry();
-        testPlane.addAttribute("position", new THREE.BufferAttribute(
-            new Float32Array([
-                -0.125, -2, 0,
-                0.125, -2, 0,
-                0.125, 2, 0,
+        // var testPlane = new THREE.BufferGeometry();
+        // testPlane.addAttribute("position", new THREE.BufferAttribute(
+        //     new Float32Array([
+        //         -0.125, -2, 0,
+        //         0.125, -2, 0,
+        //         0.125, 2, 0,
 
-                -0.125, -2, 0,
-                0.125, 2, 0,
-                -0.125, 2, 0
-            ]), 3));
+        //         -0.125, -2, 0,
+        //         0.125, 2, 0,
+        //         -0.125, 2, 0
+        //     ]), 3));
 
-        testPlane.morphAttributes.position = [
-            new THREE.BufferAttribute(new Float32Array([
-                -1, -1, 0,
-                1, -1, 0,
-                1, 1, 0,
+        // testPlane.morphAttributes.position = [
+        //     new THREE.BufferAttribute(new Float32Array([
+        //         -1, -1, 0,
+        //         1, -1, 0,
+        //         1, 1, 0,
 
-                -1, -1, 0,
-                1, 1, 0,
-                -1, 1, 0
-            ]), 3)
-        ];
+        //         -1, -1, 0,
+        //         1, 1, 0,
+        //         -1, 1, 0
+        //     ]), 3)
+        // ];
 
-        this.testPlane = new THREE.Mesh(testPlane, material);
+        // this.testPlane = new THREE.Mesh(testPlane, material);
     }
 
     public addToScene(scene: THREE.Scene): void {
-        // scene.add(this.root);
-        scene.add(this.testPlane);
+        scene.add(this.root);
     }
 
     public removeFromScene(scene: THREE.Scene): void {
@@ -129,10 +111,6 @@ export default class VisualizerIdentity {
 
     public setPosition(position: THREE.Vector3) {
         this.root.position.set(position.x, position.y, position.z);
-    }
-
-    public testMorph(value: number) {
-        this.testPlane.morphTargetInfluences[0] = value;
     }
 
     public morphBars(normalizedFreqValues: Array<number>) {

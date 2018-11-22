@@ -18,7 +18,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
     public scene: THREE.Scene;
 
     private testVisualizer0;
-    private testVisualizer1;
+    private testVisualizerIdentities = [];
 
     private visualizerFactory: VisualizerFactory;
 
@@ -72,7 +72,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 radius : 3.6,
                 arcLength : 6.6 * Math.PI / 12,
                 displayThickness : 0.08,
-                resolution : 32,
+                resolution : 64,
                 rotationMultiplier : 1.0
             },
             {
@@ -248,15 +248,15 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.testVisualizer0.setPosition(new THREE.Vector3(0, 0, 0));
         // this.testVisualizer0.setPosition(this.pathCurve.getPoint(0.5));
 
-        this.testVisualizer1 = this.visualizerFactory.identity();
-        this.testVisualizer1.addToScene(this.scene);
-        this.testVisualizer1.setPosition(new THREE.Vector3(0, 0, 0));
-        // this.testVisualizer1.setPosition(this.pathCurve.getPoint(0.5));
-
-        this.testVisualizer1.morphBars([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ]);
-        
-        this.testVisualizer1.testMorph(0.0);
+        this.testVisualizerIdentities = [
+            this.visualizerFactory.identity(),
+            this.visualizerFactory.identity(),
+            this.visualizerFactory.identity()
+        ];
+        this.testVisualizerIdentities.forEach(visualizer => {
+            visualizer.addToScene(this.scene);
+            visualizer.setPosition(this.pathCurve.getPoint(Math.random()));
+        });
     }
 
     private createLight() {
@@ -403,13 +403,14 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
                 freqValues = [];
                 for (var n = 0; n < 32; ++n) {
-                    var binIndex = n * analyser.frequencyBinCount / 32;
+                    var binIndex = Math.floor(n * analyser.frequencyBinCount / 42);
                     var value = dataArray[binIndex];
                     freqValues.push(value / 250);
                 }
 
-                // component.testVisualizer1.morphBars(freqValues);
-                component.testVisualizer1.testMorph(0.5 * Math.sin(rotation) + 0.5);
+                component.testVisualizerIdentities.forEach(visualizer => {
+                    visualizer.morphBars(freqValues);
+                });
 
                 component.render();
 
