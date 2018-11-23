@@ -61,10 +61,10 @@ function createWave(waveFunc: Function, amplitude: number, startAngle: number, r
         verticesAttributes.thin.push(verticesAttribute.thin);
     }
 
-    geometry.addAttribute("position", THREE["BufferGeometryUtils"].mergeBufferAttributes(verticesAttributes.orig));
+    geometry.addAttribute("position", THREE.BufferGeometryUtils.mergeBufferAttributes(verticesAttributes.orig));
     geometry.morphAttributes.position = [
-        THREE["BufferGeometryUtils"].mergeBufferAttributes(verticesAttributes.maxHeight),
-        THREE["BufferGeometryUtils"].mergeBufferAttributes(verticesAttributes.thin)
+        THREE.BufferGeometryUtils.mergeBufferAttributes(verticesAttributes.maxHeight),
+        THREE.BufferGeometryUtils.mergeBufferAttributes(verticesAttributes.thin)
     ];
 
     var material = new THREE.MeshBasicMaterial({

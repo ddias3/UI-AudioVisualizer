@@ -2,17 +2,17 @@ import * as THREE from "three";
 import * as util from "./util";
 
 export default class VisualizerNoiseGate {
-    private circle: THREE.Mesh;
+    private gateCircle: THREE.Mesh;
     private audioCircle: THREE.Mesh;
 
     constructor(options: Object) {
-        function createCircle(size: number, thickness: number, resolution: number): THREE.Mesh {
+        function createGateCircle(material: THREE.Material, maxSize: number, minSize: number, maxThickness: number, minThickness: number, resolution: number): THREE.Mesh {
             if (resolution < 3)
                 resolution = 3;
 
             var phi: number = 2 * Math.PI / resolution;
 
-            function createBasicShape(size: number, phi: number): Float32Array {
+            function createQuad(size: number, thickness: number, phi: number): Float32Array {
                 return new Float32Array([
                     1.0, 0.0, 0.0,
                     1.0 + (thickness / size), 0.0, 0.0,
@@ -28,28 +28,29 @@ export default class VisualizerNoiseGate {
 
             var rotationMatrix = new THREE.Matrix4();
             var verticesAttributes = {
-                orig : [],
-                fullSize : []
+                maxSize : [],
+                minSize : []
             };
 
             for (var n = 0; n < resolution; ++n) {
-                rotationMatrix.makeRotationZ(n * phi).scale(new THREE.Vector3(size, size, 1.0));
+                var verticesAttributeLocal = {
+                    maxSize : new THREE.BufferAttribute(createQuad(maxSize, maxThickness, phi), 3),
+                    minSize : new THREE.BufferAttribute(createQuad(minSize, minThickness, phi), 3)
+                }
+                rotationMatrix.makeRotationZ(n * phi).scale(new THREE.Vector3(maxSize, maxSize, 1.0));
+                rotationMatrix.applyToBufferAttribute(verticesAttributeLocal.maxSize);
 
-                var verticesAttributeLocal = new THREE.BufferAttribute(createBasicShape(phi, size), 3);
-                rotationMatrix.applyToBufferAttribute(verticesAttributeLocal);
+                rotationMatrix.makeRotationZ(n * phi).scale(new THREE.Vector3(minSize, minSize, 1.0));
+                rotationMatrix.applyToBufferAttribute(verticesAttributeLocal.minSize);
 
-                verticesAttributes.orig.push(verticesAttributeLocal);
+                verticesAttributes.maxSize.push(verticesAttributeLocal.maxSize);
+                verticesAttributes.minSize.push(verticesAttributeLocal.minSize);
             }
 
-            var verticesAttribute = THREE["BufferGeometryUtils"].mergeBufferAttributes(verticesAttributes);
-            geometry.addAttribute("position", verticesAttribute);
-
-            var material = new THREE.MeshLambertMaterial({
-                transparent : true,
-                opacity : 0.8,
-                color : 0x00FF00,
-                side : THREE.FrontSide
-            });
+            geometry.addAttribute("position", THREE.BufferGeometryUtils.mergeBufferAttributes(verticesAttributes.minSize));
+            geometry.morphAttributes.position = [
+                THREE.BufferGeometryUtils.mergeBufferAttributes(verticesAttributes.maxSize)
+            ];
 
             geometry.computeFaceNormals();
             geometry.computeVertexNormals();
@@ -57,24 +58,45 @@ export default class VisualizerNoiseGate {
             return new THREE.Mesh(geometry, material);
         }
 
-        this.circle = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color : 0x00A0FF }));
-        this.audioCircle = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2, 0.5), new THREE.MeshBasicMaterial({ color : 0x0000FF }));
+        this.gateCircle = createGateCircle(new THREE.MeshBasicMaterial({
+                transparent : true,
+                opacity : 0.8,
+                color : 0x00A0FF,
+                side : THREE.FrontSide,
+                morphTargets : true
+            }), 3.6, 0.25, 0.05, 0.05, 128);
+
+        this.audioCircle = createGateCircle(new THREE.MeshBasicMaterial({
+                transparent : true,
+                opacity : 0.3,
+                color : 0x00A0FF,
+                side : THREE.FrontSide,
+                morphTargets : true
+            }), 0.1, 0.1, 3.5, 0.05, 128);
+    }
+
+    public morphGate(cutOffVolume: number) {
+        this.gateCircle.morphTargetInfluences[0] = cutOffVolume;
+    }
+
+    public morphDisplay(amplitude: number) {
+        this.audioCircle.morphTargetInfluences[0] = amplitude;
     }
 
     public addToScene(scene: THREE.Scene): void {
-        scene.add(this.circle);
+        scene.add(this.gateCircle);
         scene.add(this.audioCircle);
     }
 
     public removeFromScene(scene: THREE.Scene): void {
-        scene.remove(this.circle);
+        scene.remove(this.gateCircle);
         scene.remove(this.audioCircle);
-        this.circle.geometry.dispose();
+        this.gateCircle.geometry.dispose();
         this.audioCircle.geometry.dispose();
     }
 
     public setPosition(position: THREE.Vector3) {
-        this.circle.position.set(position.x, position.y, position.z);
+        this.gateCircle.position.set(position.x, position.y, position.z);
         this.audioCircle.position.set(position.x, position.y, position.z);
     }
 }

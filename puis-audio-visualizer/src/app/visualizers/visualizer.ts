@@ -60,10 +60,10 @@ export class VisualizerFactory {
     }
 
     public comp() {
-        return new VisualizerComp({}, {});
+        return new VisualizerComp({});
     }
 
-    public noiseGate() {
+    public noise() {
         return new VisualizerNoiseGate({});
     }
 

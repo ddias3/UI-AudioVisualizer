@@ -20,6 +20,8 @@ export class VisualizerContainerComponent implements AfterViewInit {
     private visualizers: Array<any> = [];
 
     private testVisualizer0;
+    private testVisualizer1;
+    private testVisualizer2;
     private testVisualizerIdentities = [];
 
     private visualizerFactory: VisualizerFactory;
@@ -245,7 +247,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
         var actualSplineT = [];
         for (var n = 0; n < this.visualizers.length; ++n)
-            actualSplineT.push(this.spacingFunc((n / this.visualizers.length) + this.scrollVisualizers - 0.5));
+            actualSplineT.push(this.spacingFunc((n / this.visualizers.length) + this.scrollVisualizers - 0.45));
 
         for (var n = 0; n < this.visualizers.length; ++n)
             this.visualizers[n].setPosition(this.pathCurve.getPoint(actualSplineT[n]));
@@ -271,20 +273,26 @@ export class VisualizerContainerComponent implements AfterViewInit {
         var line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(this.pathCurve.getPoints(64)), new THREE.LineBasicMaterial({ color : 0xFFFFFF }));
 
         this.scene = new THREE.Scene();
-        this.scene.add(new THREE.AxesHelper(8));
-        this.scene.add(line);
+        // this.scene.add(new THREE.AxesHelper(8));
+        // this.scene.add(line);
 
         this.testVisualizer0 = this.visualizerFactory.eq({}, this.CIRCLES, this.WAVES);
         this.testVisualizer0.addToScene(this.scene);
         // this.testVisualizer0.setPosition(new THREE.Vector3(0, 0, 0));
         // this.testVisualizer0.setPosition(this.pathCurve.getPoint(0.5));
 
+        this.testVisualizer1 = this.visualizerFactory.noise();
+        this.testVisualizer1.addToScene(this.scene);
+
+        this.testVisualizer2 = this.visualizerFactory.comp();
+        this.testVisualizer2.addToScene(this.scene);
+
         this.testVisualizerIdentities = [
-            this.visualizerFactory.identity(),
-            this.visualizerFactory.identity(),
-            this.visualizerFactory.identity(),
-            this.visualizerFactory.identity(),
-            this.visualizerFactory.identity(),
+            // this.visualizerFactory.identity(),
+            // this.visualizerFactory.identity(),
+            // this.visualizerFactory.identity(),
+            // this.visualizerFactory.identity(),
+            // this.visualizerFactory.identity(),
             this.visualizerFactory.identity(),
             this.visualizerFactory.identity(),
             this.visualizerFactory.identity(),
@@ -299,8 +307,12 @@ export class VisualizerContainerComponent implements AfterViewInit {
         });
 
         for (var n = 0; n < this.testVisualizerIdentities.length; ++n) {
-            if (n == 7)
+            if (n == 1)
+                this.visualizers.push(this.testVisualizer2);
+            else if (n == 5)
                 this.visualizers.push(this.testVisualizer0);
+            else if (n == 6)
+                this.visualizers.push(this.testVisualizer1);
             this.visualizers.push(this.testVisualizerIdentities[n]);
         }
 
@@ -583,6 +595,12 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
                 component.testVisualizer0.rotate(0.004);
                 component.testVisualizer0.morphWaves(freqValues);
+
+                component.testVisualizer1.morphGate(Math.random());
+                component.testVisualizer1.morphDisplay(Math.random());
+
+                component.testVisualizer2.morphCompression(Math.random(), Math.random());
+                component.testVisualizer2.morphDisplay(Math.random());
 
                 freqValues = [];
                 for (var n = 0; n < 32; ++n) {
