@@ -223,23 +223,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
     ];
 
     private scrollVisualizers: number = 0.5;
-    // private spacingCurve: THREE.CatmullRomCurve3 = new THREE.CatmullRomCurve3([
-    //     new THREE.Vector3(-1.0, 0.0,   0),
-    //     new THREE.Vector3(-0.8, 0.0,   0),
-    //     new THREE.Vector3(-0.25, 0.08, 0),
-    //     new THREE.Vector3(0.0, 0.8,    0),
-    //     new THREE.Vector3(0.25, 0.08,  0),
-    //     new THREE.Vector3(0.8, 0.0,    0),
-    //     new THREE.Vector3(1.0, 0.0,    0),
-    // ]);
     private spacingCurve: THREE.CatmullRomCurve3 = new THREE.CatmullRomCurve3([
-        // new THREE.Vector3(-1.0, 0.0,   0),
-        // new THREE.Vector3(-0.8, 0.0,   0),
-        // new THREE.Vector3(-0.2, 0.08,  0),
-        // new THREE.Vector3(0.2, 0.92,   0),
-        // new THREE.Vector3(0.8, 1.0,    0),
-        // new THREE.Vector3(1.0, 1.0,    0),
-
             // desired values are between 13/64 and 51/64
         new THREE.Vector3(-1.0, 0.0,   0),
         new THREE.Vector3(0.0, 0.0,   0),
