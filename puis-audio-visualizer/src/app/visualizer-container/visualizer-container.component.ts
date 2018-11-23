@@ -223,17 +223,21 @@ export class VisualizerContainerComponent implements AfterViewInit {
     ];
 
     private scrollVisualizers: number = 0.5;
-    private spacingCurve: THREE.CatmullRomCurve3 = new THREE.CatmullRomCurve3([
-            // desired values are between 13/64 and 51/64
-        new THREE.Vector3(-1.0, 0.0,   0),
-        new THREE.Vector3(0.0, 0.0,   0),
-        // new THREE.Vector3(0.1, 0.001,   0),
-        new THREE.Vector3(0.42, 0.08,  0),
-        new THREE.Vector3(0.58, 0.92,   0),
-        // new THREE.Vector3(0.9, 1.0,    0),
-        new THREE.Vector3(1.0, 1.0,    0),
-        new THREE.Vector3(2.0, 1.0,    0),
-    ]);
+    private spacingFunc = function () {
+        const point0 = new THREE.Vector2(-1.0, 0.0);
+        const point1 = new THREE.Vector2(0.4, 0.15);
+        const point2 = new THREE.Vector2(0.6, 0.85);
+        const point3 = new THREE.Vector2(2.0, 1.0);
+        return x => {
+            if (x < point1.x)
+                return (point1.y - point0.y) / (point1.x - point0.x) * (x - point0.x) + point0.y;
+            else if (x < point2.x)
+                return (point2.y - point1.y) / (point2.x - point1.x) * (x - point1.x) + point1.y;
+            else
+                return (point3.y - point2.y) / (point3.x - point2.x) * (x - point1.x) + point2.y;
+        };
+    }();
+
     private placeVisualizers() {
         var splineT = [];
         for (var n = 0; n < this.visualizers.length; ++n)
@@ -241,12 +245,10 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
         var actualSplineT = [];
         for (var n = 0; n < this.visualizers.length; ++n)
-            actualSplineT.push(this.spacingCurve.getPoint(0.59375 * (n / this.visualizers.length) + 0.203125).y);
+            actualSplineT.push(this.spacingFunc((n / this.visualizers.length) + this.scrollVisualizers - 0.5));
 
         for (var n = 0; n < this.visualizers.length; ++n)
             this.visualizers[n].setPosition(this.pathCurve.getPoint(actualSplineT[n]));
-
-        this.scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(this.spacingCurve.getPoints(64)), new THREE.LineBasicMaterial({ color : 0xFFA0A0 })));
     }
 
     constructor(visualizerFactory: VisualizerFactory) {
@@ -422,10 +424,10 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 break;
 
             case "n":
-                this.scrollDelta = 0.001;
+                this.scrollDelta = 0.008;
                 break;
             case "m":
-                this.scrollDelta = -0.001;
+                this.scrollDelta = -0.008;
                 break;
         }
     }
@@ -593,6 +595,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
                 component.scrollVisualizers += component.scrollDelta;
                 component.scrollVisualizers = component.scrollVisualizers <= 0.0 ? 0.0 : component.scrollVisualizers >= 1.0 ? 1.0 : component.scrollVisualizers;
+                component.placeVisualizers();
 
                 // console.log(component.cameraMoveDelta);
                     // This math is wrong.
