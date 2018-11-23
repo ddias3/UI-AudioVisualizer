@@ -314,7 +314,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
             new THREE.AmbientLight(0x404040)
         ];
         
-        lights[0].position.set(0, 10, -10);
+        lights[0].position.set(0, 10, -12);
         lights[1].position.set(0, 0, 10);
 
         lights.forEach(light => {

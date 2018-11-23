@@ -38,6 +38,34 @@ export default class VisualizerIdentity {
             this.root.add(plane);
             this.bars.push(plane);
         }
+
+        var frameGeometry = new THREE.BufferGeometry();
+        frameGeometry.addAttribute("position", new THREE.BufferAttribute(new Float32Array([
+                -4.2, 2.1, 0,   // 0
+                4.2, 2.1, 0,    // 1
+                -4.15, 2.05, 0, // 2
+                4.15, 2.05, 0,  // 3
+                -4.15, -2.05, 0,// 4
+                4.15, -2.05, 0, // 5
+                -4.2, -2.1, 0,  // 6
+                4.2, -2.1, 0    // 7
+            ]), 3));
+
+        frameGeometry.setIndex(new THREE.BufferAttribute(new Uint16Array([
+                2, 1, 0, // Top Quad
+                // 1, 2, 3,
+
+                6, 2, 0, // Left Quad
+                6, 4, 2,
+
+                // 1, 3, 7, // Right Quad
+                // 3, 5, 7,
+
+                6, 5, 4, // Bottom Quad
+                // 5, 6, 7
+            ]), 1));
+        this.frame = new THREE.Mesh(frameGeometry, new THREE.MeshBasicMaterial({ color : 0xA0A0A0, transparent : true, opacity : 0.55 }));
+        this.root.add(this.frame);
     }
 
     public addToScene(scene: THREE.Scene): void {
