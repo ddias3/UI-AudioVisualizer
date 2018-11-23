@@ -276,10 +276,10 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
     private createScene() {
         this.pathCurve = new THREE.CubicBezierCurve3(
-            new THREE.Vector3(-6, 1, -16),
-            new THREE.Vector3(0, 1.75, -10),
-            new THREE.Vector3(0, 1, 4),
-            new THREE.Vector3(6, -2, 5),
+            new THREE.Vector3(-7, 0, -16),
+            new THREE.Vector3(-1, 0.75, -10),
+            new THREE.Vector3(-1, 0, 4),
+            new THREE.Vector3(5, -3, 5),
         );
 
         var line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(this.pathCurve.getPoints(64)), new THREE.LineBasicMaterial({ color : 0xFFFFFF }));
@@ -338,10 +338,11 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
     private createCamera() {
         let aspectRatio = this.getAspectRatio();
-        this.camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.01, 1000);
+        this.camera = new THREE.PerspectiveCamera(45, aspectRatio, 0.01, 1000);
 
-        this.camera.position.set(-3, 1, 8);
-        this.camera.lookAt(0, 0, 0);
+        this.camera.position.set(-6.0, 1.5, 10.15);
+        // this.camera.lookAt(this.pathCurve.getPoint(0.5));
+        this.camera.lookAt(-1.361, -0.244, 0);
     }
 
     private getAspectRatio(): number {
@@ -620,6 +621,9 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
                 component.camera.rotateOnWorldAxis(WORLD_YAW_AXIS, component.cameraLookDelta.y);
                 component.camera.rotateOnAxis(WORLD_PITCH_AXIS, component.cameraLookDelta.x);
+
+                // console.log(component.camera.getWorldPosition(new THREE.Vector3(0, 0, 0)));
+                // console.log(component.camera.getWorldDirection(new THREE.Vector3(0, 0, 0)));
 
                 component.render();
 

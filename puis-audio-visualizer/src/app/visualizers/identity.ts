@@ -9,35 +9,6 @@ export default class VisualizerIdentity {
     private testPlane: THREE.Mesh;
 
     constructor(options: Object) {
-        // createTestVisualizer_old() {
-        //         var cubes: Array<THREE.Mesh> = [];
-
-        //         function setHeights(heights: Array<number>): void {
-        //             if (heights.length !== cubes.length)
-        //                 throw new Error("invalid number of heights to set visualizer");
-
-        //             for (var n = 0; n < cubes.length; ++n) {
-        //                 cubes[n].scale.set(1, heights[n], 1);
-        //             }
-        //         }
-
-        //         var material = new THREE.MeshLambertMaterial({ color: 0x12F34F });
-
-        //         for (var n = 0; n < 16; ++n) {
-        //             var geometry = new THREE.BoxGeometry(0.25, 0.1, 0.5);
-        //             var cube = new THREE.Mesh(geometry, material);
-        //             cube.position.set(0.5 * (n - 8), 0, 0);
-        //             cubes.push(cube);
-        //         }
-
-        //         cubes.forEach(cube => {
-        //             // this.scene.add(cube);
-        //         });
-
-        //         return setHeights;
-        //     }
-        // }
-
         this.root = new THREE.Group();
         this.bars = [];
 
@@ -56,43 +27,17 @@ export default class VisualizerIdentity {
             geometryMin.applyMatrix(new THREE.Matrix4().makeTranslation(-3.9 + (n / 4), -2 + 0.05, 0));
             geometryMax.applyMatrix(new THREE.Matrix4().makeTranslation(-3.9 + (n / 4), 0, 0));
 
-            geometryMin.morphTargets.push({
-                name     : "max",
-                vertices : geometryMax.vertices
+            geometryMax.morphTargets.push({
+                name     : "min",
+                vertices : geometryMin.vertices
             });
 
-            var plane = new THREE.Mesh(geometryMin, material);
+            var plane = new THREE.Mesh(geometryMax, material);
+            plane.morphTargetInfluences[0] = 1.0;
 
             this.root.add(plane);
             this.bars.push(plane);
         }
-
-                // var testPlane = new THREE.PlaneGeometry(0.25, 4);
-        // var testPlane = new THREE.BufferGeometry();
-        // testPlane.addAttribute("position", new THREE.BufferAttribute(
-        //     new Float32Array([
-        //         -0.125, -2, 0,
-        //         0.125, -2, 0,
-        //         0.125, 2, 0,
-
-        //         -0.125, -2, 0,
-        //         0.125, 2, 0,
-        //         -0.125, 2, 0
-        //     ]), 3));
-
-        // testPlane.morphAttributes.position = [
-        //     new THREE.BufferAttribute(new Float32Array([
-        //         -1, -1, 0,
-        //         1, -1, 0,
-        //         1, 1, 0,
-
-        //         -1, -1, 0,
-        //         1, 1, 0,
-        //         -1, 1, 0
-        //     ]), 3)
-        // ];
-
-        // this.testPlane = new THREE.Mesh(testPlane, material);
     }
 
     public addToScene(scene: THREE.Scene): void {
@@ -118,7 +63,7 @@ export default class VisualizerIdentity {
             throw new Error("Incompatible number of wave frequency values " + normalizedFreqValues.length);
 
         for (var n = 0; n < this.bars.length; ++n) {
-            this.bars[n].morphTargetInfluences[0] = normalizedFreqValues[n];
+            this.bars[n].morphTargetInfluences[0] = 1 - normalizedFreqValues[n];
         }
     }
 }
