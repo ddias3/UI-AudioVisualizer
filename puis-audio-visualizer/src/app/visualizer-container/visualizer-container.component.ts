@@ -17,6 +17,8 @@ export class VisualizerContainerComponent implements AfterViewInit {
     private camera: THREE.PerspectiveCamera;
     public scene: THREE.Scene;
 
+    private visualizers: Array<any> = [];
+
     private testVisualizer0;
     private testVisualizerIdentities = [];
 
@@ -220,6 +222,49 @@ export class VisualizerContainerComponent implements AfterViewInit {
         155, 165, 180, 190
     ];
 
+    private scrollVisualizers: number = 0.5;
+    // private spacingCurve: THREE.CatmullRomCurve3 = new THREE.CatmullRomCurve3([
+    //     new THREE.Vector3(-1.0, 0.0,   0),
+    //     new THREE.Vector3(-0.8, 0.0,   0),
+    //     new THREE.Vector3(-0.25, 0.08, 0),
+    //     new THREE.Vector3(0.0, 0.8,    0),
+    //     new THREE.Vector3(0.25, 0.08,  0),
+    //     new THREE.Vector3(0.8, 0.0,    0),
+    //     new THREE.Vector3(1.0, 0.0,    0),
+    // ]);
+    private spacingCurve: THREE.CatmullRomCurve3 = new THREE.CatmullRomCurve3([
+        // new THREE.Vector3(-1.0, 0.0,   0),
+        // new THREE.Vector3(-0.8, 0.0,   0),
+        // new THREE.Vector3(-0.2, 0.08,  0),
+        // new THREE.Vector3(0.2, 0.92,   0),
+        // new THREE.Vector3(0.8, 1.0,    0),
+        // new THREE.Vector3(1.0, 1.0,    0),
+
+            // desired values are between 13/64 and 51/64
+        new THREE.Vector3(-1.0, 0.0,   0),
+        new THREE.Vector3(0.0, 0.0,   0),
+        // new THREE.Vector3(0.1, 0.001,   0),
+        new THREE.Vector3(0.42, 0.08,  0),
+        new THREE.Vector3(0.58, 0.92,   0),
+        // new THREE.Vector3(0.9, 1.0,    0),
+        new THREE.Vector3(1.0, 1.0,    0),
+        new THREE.Vector3(2.0, 1.0,    0),
+    ]);
+    private placeVisualizers() {
+        var splineT = [];
+        for (var n = 0; n < this.visualizers.length; ++n)
+            splineT.push(n / this.visualizers.length);
+
+        var actualSplineT = [];
+        for (var n = 0; n < this.visualizers.length; ++n)
+            actualSplineT.push(this.spacingCurve.getPoint(0.59375 * (n / this.visualizers.length) + 0.203125).y);
+
+        for (var n = 0; n < this.visualizers.length; ++n)
+            this.visualizers[n].setPosition(this.pathCurve.getPoint(actualSplineT[n]));
+
+        this.scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(this.spacingCurve.getPoints(64)), new THREE.LineBasicMaterial({ color : 0xFFA0A0 })));
+    }
+
     constructor(visualizerFactory: VisualizerFactory) {
         this.visualizerFactory = visualizerFactory;
         this.render = this.render.bind(this);
@@ -231,10 +276,10 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
     private createScene() {
         this.pathCurve = new THREE.CubicBezierCurve3(
-            new THREE.Vector3(-3, -2, -16),
-            new THREE.Vector3(0, 0.75, -10),
-            new THREE.Vector3(0, 0.75, 10),
-            new THREE.Vector3(2, -2, 10),
+            new THREE.Vector3(-6, 1, -16),
+            new THREE.Vector3(0, 1.75, -10),
+            new THREE.Vector3(0, 1, 4),
+            new THREE.Vector3(6, -2, 5),
         );
 
         var line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(this.pathCurve.getPoints(64)), new THREE.LineBasicMaterial({ color : 0xFFFFFF }));
@@ -245,18 +290,35 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
         this.testVisualizer0 = this.visualizerFactory.eq({}, this.CIRCLES, this.WAVES);
         this.testVisualizer0.addToScene(this.scene);
-        this.testVisualizer0.setPosition(new THREE.Vector3(0, 0, 0));
+        // this.testVisualizer0.setPosition(new THREE.Vector3(0, 0, 0));
         // this.testVisualizer0.setPosition(this.pathCurve.getPoint(0.5));
 
         this.testVisualizerIdentities = [
+            this.visualizerFactory.identity(),
+            this.visualizerFactory.identity(),
+            this.visualizerFactory.identity(),
+            this.visualizerFactory.identity(),
+            this.visualizerFactory.identity(),
+            this.visualizerFactory.identity(),
+            this.visualizerFactory.identity(),
+            this.visualizerFactory.identity(),
+            this.visualizerFactory.identity(),
             this.visualizerFactory.identity(),
             this.visualizerFactory.identity(),
             this.visualizerFactory.identity()
         ];
         this.testVisualizerIdentities.forEach(visualizer => {
             visualizer.addToScene(this.scene);
-            visualizer.setPosition(this.pathCurve.getPoint(Math.random()));
+            // visualizer.setPosition(this.pathCurve.getPoint(Math.random()));
         });
+
+        for (var n = 0; n < this.testVisualizerIdentities.length; ++n) {
+            if (n == 7)
+                this.visualizers.push(this.testVisualizer0);
+            this.visualizers.push(this.testVisualizerIdentities[n]);
+        }
+
+        this.placeVisualizers();
     }
 
     private createLight() {
@@ -276,7 +338,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
     private createCamera() {
         let aspectRatio = this.getAspectRatio();
-        this.camera = new THREE.PerspectiveCamera(45, aspectRatio, 0.1, 1000);
+        this.camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.01, 1000);
 
         this.camera.position.set(-3, 1, 8);
         this.camera.lookAt(0, 0, 0);
@@ -329,6 +391,106 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
         this.render();
+    }
+
+    private cameraMoveDelta: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
+    private cameraLookDelta: THREE.Vectoe3 = new THREE.Vector3(0, 0, 0);
+    private scrollDelta: number = 0.0;
+
+    @HostListener("document:keydown", ["$event"])
+    public onKeyDown(event: KeyboardEvent) {
+        console.log("Key Down: " + event.key);
+
+        switch (event.key) {
+            case "w":
+                this.cameraMoveDelta.z = -0.08;
+                break;
+            case "a":
+                this.cameraMoveDelta.x = -0.02;
+                break;
+            case "s":
+                this.cameraMoveDelta.z = 0.08;
+                break;
+            case "d":
+                this.cameraMoveDelta.x = 0.02;
+                break;
+            case "q":
+                this.cameraMoveDelta.y = 0.02;
+                break;
+            case "e":
+                this.cameraMoveDelta.y = -0.02;
+                break;
+
+            case "ArrowUp":
+                    // Pitch
+                this.cameraLookDelta.x = 0.01;
+                break;
+            case "ArrowLeft":
+                    // Yaw
+                this.cameraLookDelta.y = 0.01;
+                break;
+            case "ArrowDown":
+                this.cameraLookDelta.x = -0.01;
+                break;
+            case "ArrowRight":
+                this.cameraLookDelta.y = -0.01;
+                break;
+
+            case "n":
+                this.scrollDelta = 0.001;
+                break;
+            case "m":
+                this.scrollDelta = -0.001;
+                break;
+        }
+    }
+
+    @HostListener("document:keyup", ["$event"])
+    public onKeyUp(event: KeyboardEvent) {
+        console.log("Key Up: " + event.key);
+
+        switch (event.key) {
+            case "w":
+                this.cameraMoveDelta.z = 0.0;
+                break;
+            case "a":
+                this.cameraMoveDelta.x = 0.0;
+                break;
+            case "s":
+                this.cameraMoveDelta.z = 0.0;
+                break;
+            case "d":
+                this.cameraMoveDelta.x = 0.0;
+                break;
+            case "q":
+                this.cameraMoveDelta.y = 0.0;
+                break;
+            case "e":
+                this.cameraMoveDelta.y = 0.0;
+                break;
+
+            case "ArrowUp":
+                    // Pitch
+                this.cameraLookDelta.x = 0.0;
+                break;
+            case "ArrowLeft":
+                    // Yaw
+                this.cameraLookDelta.y = 0.0;
+                break;
+            case "ArrowDown":
+                this.cameraLookDelta.x = 0.0;
+                break;
+            case "ArrowRight":
+                this.cameraLookDelta.y = 0.0;
+                break;
+
+            case "n":
+                this.scrollDelta = 0.0;
+                break;
+            case "m":
+                this.scrollDelta = 0.0;
+                break;
+        }
     }
 
     public onMouseDown(event: MouseEvent) {
@@ -420,7 +582,55 @@ export class VisualizerContainerComponent implements AfterViewInit {
             updateVisualizer();
         }
 
-        testEQVisualizer();
+        function testCameraControls() {
+
+            const WORLD_PITCH_AXIS = new THREE.Vector3(1, 0, 0);
+            const WORLD_YAW_AXIS   = new THREE.Vector3(0, 1, 0);
+
+            function updateScene() {
+                rotation += 0.004;
+
+                var freqValues = [];
+                for (var n = 0; n < 12; ++n)
+                    freqValues.push(Math.random());
+
+                component.testVisualizer0.rotate(0.004);
+                component.testVisualizer0.morphWaves(freqValues);
+
+                freqValues = [];
+                for (var n = 0; n < 32; ++n) {
+                    freqValues.push(Math.random());
+                }
+
+                component.testVisualizerIdentities.forEach(visualizer => {
+                    visualizer.morphBars(freqValues);
+                });
+
+                component.scrollVisualizers += component.scrollDelta;
+                component.scrollVisualizers = component.scrollVisualizers <= 0.0 ? 0.0 : component.scrollVisualizers >= 1.0 ? 1.0 : component.scrollVisualizers;
+
+                // console.log(component.cameraMoveDelta);
+                    // This math is wrong.
+                // var cameraMove: THREE.Vector3 = component.cameraMoveDelta.clone().applyMatrix4(component.camera.matrix);
+                // component.camera.add(cameraMove);
+
+                component.camera.translateX(component.cameraMoveDelta.x);
+                component.camera.translateY(component.cameraMoveDelta.y);
+                component.camera.translateZ(component.cameraMoveDelta.z);
+
+                component.camera.rotateOnWorldAxis(WORLD_YAW_AXIS, component.cameraLookDelta.y);
+                component.camera.rotateOnAxis(WORLD_PITCH_AXIS, component.cameraLookDelta.x);
+
+                component.render();
+
+                requestAnimationFrame(updateScene);
+            }
+
+            updateScene();
+        }
+
+        // testEQVisualizer();
+        testCameraControls();
     }
 
     ngAfterViewInit() {

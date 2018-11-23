@@ -68,6 +68,6 @@ export class VisualizerFactory {
     }
 
     public identity() {
-        return new VisualizerIdentity();
+        return new VisualizerIdentity({});
     }
 }
