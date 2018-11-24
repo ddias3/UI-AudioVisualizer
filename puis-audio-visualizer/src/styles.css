@@ -1,12 +1,18 @@
 /* You can add global styles to this file, and also import other style files */
 
-h1 {
+h1, h2 {
     color: #3ADA3A;
     font-family: Arial, sans-serif;
     font-size: 250%;
 }
 
-h2, h3 {
+h3, h4 {
+    color: #FCFCFC;
+    font-family: Arial, sans-serif;
+    font-weight: lighter;
+}
+
+p {
     color: #FCFCFC;
     font-family: Arial, sans-serif;
     font-weight: lighter;

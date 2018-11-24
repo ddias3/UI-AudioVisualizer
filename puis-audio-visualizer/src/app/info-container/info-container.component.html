@@ -1,7 +1,28 @@
 <div class="overlay top left">
-    <h1> TEST </h1>
-    <h2>{{test}}</h2>
-</div>
-<div class="overlay bottom right">
-    <h1> TOAST </h1>
+    <h1>Audio Signal Flow</h1>
+    <p *ngIf="display === 'multi'">Drag to add signal process</p>
+    <div *ngIf="display === 'multi'">
+        <div class="button-drag disable-text-selection" #equilizer_drag>
+            <p>Equilizer</p>
+        </div>
+        <div class="button-drag disable-text-selection" #noise_gate_drag>
+            <p>Noise Gate</p>
+        </div>
+        <div class="button-drag disable-text-selection" #compression_drag>
+            <p>Compression</p>
+        </div>
+    </div>
+    <h3 *ngIf="display === 'eq'">Equilizer</h3>
+    <div *ngIf="display === 'eq'">
+        <info-equilizer></info-equilizer>
+    </div>
+    <h3 *ngIf="display === 'noise'">Noise Gate</h3>
+    <div *ngIf="display === 'noise'">
+        <info-noise-gate></info-noise-gate>
+    </div>
+    <h3 *ngIf="display === 'comp'">Compression</h3>
+    <div *ngIf="display === 'comp'">
+        <info-compression></info-compression>
+    </div>
+    <h3 *ngIf="display === 'identity'">Identity</h3>
 </div>

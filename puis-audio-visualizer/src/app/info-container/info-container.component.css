@@ -18,3 +18,23 @@
     z-index: 2;
     position: fixed;
 }
+
+.button-drag {
+    width: 50%;
+    text-align: center;
+    background: #404040;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding-top: 20px;
+    padding-left: 5px;
+    padding-bottom: 20px;
+}
+
+.disable-text-selection {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}

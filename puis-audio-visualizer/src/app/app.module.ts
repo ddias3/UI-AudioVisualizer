@@ -9,13 +9,19 @@ import { InfoContainerComponent } from './info-container/info-container.componen
 import { AudioContainerComponent } from './audio-container/audio-container.component';
 import { VisualizerFactory } from './visualizers/visualizer-factory.service';
 import { VisualizersService } from './visualizers/visualizers.service';
+import { InfoEquilizerComponent } from './info-equilizer/info-equilizer.component';
+import { InfoNoiseGateComponent } from './info-noise-gate/info-noise-gate.component';
+import { InfoCompressionComponent } from './info-compression/info-compression.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     VisualizerContainerComponent,
     InfoContainerComponent,
-    AudioContainerComponent
+    AudioContainerComponent,
+    InfoEquilizerComponent,
+    InfoNoiseGateComponent,
+    InfoCompressionComponent
   ],
   imports: [
     BrowserModule,

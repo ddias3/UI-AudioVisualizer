@@ -240,6 +240,9 @@ export class VisualizersService {
     }
 
     public placeOrder(visualizer: any, newPlacement: number) {
+        if (newPlacement < 0)
+            newPlacement = this._visualizers.length + newPlacement;
+
         var oldIndex = 0;
         while (visualizer !== this._visualizers[oldIndex])
             ++oldIndex;

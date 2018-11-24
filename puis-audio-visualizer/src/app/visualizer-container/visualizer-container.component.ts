@@ -103,6 +103,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         // this.scene.add(line);
 
         this.userActiveVisualizer = this.visualizersService.createVisualizer("identity", this.scene);
+        this.userActiveVisualizer = this.visualizersService.createVisualizer("identity", this.scene);
     }
 
     private createLight() {
@@ -195,15 +196,19 @@ export class VisualizerContainerComponent implements AfterViewInit {
         switch (event.key) {
             case "1":
                 this.userActiveVisualizer = this.visualizersService.createVisualizer("identity", this.scene);
+                this.visualizersService.placeOrder(this.userActiveVisualizer, -2);
                 break;
             case "2":
                 this.userActiveVisualizer = this.visualizersService.createVisualizer("eq", this.scene);
+                this.visualizersService.placeOrder(this.userActiveVisualizer, -2);
                 break;
             case "3":
                 this.userActiveVisualizer = this.visualizersService.createVisualizer("noise", this.scene);
+                this.visualizersService.placeOrder(this.userActiveVisualizer, -2);
                 break;
             case "4":
                 this.userActiveVisualizer = this.visualizersService.createVisualizer("comp", this.scene);
+                this.visualizersService.placeOrder(this.userActiveVisualizer, -2);
                 break;
 
             case "[":
