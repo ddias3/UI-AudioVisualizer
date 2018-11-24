@@ -1,7 +1,7 @@
 import { Component, HostListener, ViewChild, AfterViewInit, ElementRef } from '@angular/core';
 import * as THREE from 'three';
 
-import { VisualizerFactory } from "../visualizers/visualizer";
+import { VisualizerFactory } from "../visualizers/visualizer-factory.service";
 
 @Component({
     selector: 'visualizer-container',

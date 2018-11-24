@@ -7,7 +7,8 @@ import { AppComponent } from './app.component';
 import { VisualizerContainerComponent } from './visualizer-container/visualizer-container.component';
 import { InfoContainerComponent } from './info-container/info-container.component';
 import { AudioContainerComponent } from './audio-container/audio-container.component';
-import { VisualizerFactory } from './visualizers/visualizer';
+import { VisualizerFactory } from './visualizers/visualizer-factory.service';
+import { VisualizersService } from './visualizers/visualizers.service';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { VisualizerFactory } from './visualizers/visualizer';
     FormsModule
   ],
   providers: [
-    VisualizerFactory
+    VisualizerFactory,
+    VisualizersService
   ],
   bootstrap: [AppComponent]
 })
