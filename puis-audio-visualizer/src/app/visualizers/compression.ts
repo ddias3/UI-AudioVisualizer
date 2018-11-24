@@ -126,7 +126,7 @@ export class VisualizerCompression {
                 color : 0xFFFF00,
                 side : THREE.FrontSide,
                 morphTargets : true
-            }), 3.6, 0.25, 1.5, 0.05, 128);
+            }), 3.2, 0.25, 1.5, 0.05, 128);
 
         this.audioCircle = createAudioCircle(new THREE.MeshBasicMaterial({
                 transparent : true,

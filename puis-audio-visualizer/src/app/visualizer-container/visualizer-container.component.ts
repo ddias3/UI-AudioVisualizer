@@ -21,6 +21,27 @@ export class VisualizerContainerComponent implements AfterViewInit {
     canvasRef: ElementRef;
 
     private visualizersService: VisualizersService;
+
+    private currentView = "multi";
+    private views = {
+        multi : {
+            userActiveVisualizer : undefined,
+            camera : {
+                location : new THREE.Vector3(-6.0, 1.5, 10.15),
+                lookAt : new THREE.Vector3(-1.361, -0.244, 0),
+                fov : 45
+            }
+        },
+        single : {
+            userActiveVisualizer : undefined,
+            camera : {
+                location : new THREE.Vector3(0, 100, 17),
+                lookAt : new THREE.Vector3(0, 100, 0),
+                fov : 30
+            }
+        }
+    };
+
     private userActiveVisualizer;
 
     private pathCurve: THREE.CubicBezierCurve3;
@@ -53,6 +74,9 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
         for (var n = 0; n < visualizers.length; ++n)
             visualizers[n].setPosition(this.pathCurve.getPoint(actualSplineT[n]));
+
+        if (this.currentView === "single")
+            this.userActiveVisualizer.setPosition(this.views[this.currentView].camera.lookAt);        
     }
 
     constructor(visualizersService: VisualizersService) {
@@ -78,7 +102,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         // this.scene.add(new THREE.AxesHelper(8));
         // this.scene.add(line);
 
-        this.visualizersService.createVisualizer("identity", this.scene);
+        this.userActiveVisualizer = this.visualizersService.createVisualizer("identity", this.scene);
     }
 
     private createLight() {
@@ -98,11 +122,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
     private createCamera() {
         let aspectRatio = this.getAspectRatio();
-        this.camera = new THREE.PerspectiveCamera(45, aspectRatio, 0.01, 1000);
-
-        this.camera.position.set(-6.0, 1.5, 10.15);
-        // this.camera.lookAt(this.pathCurve.getPoint(0.5));
-        this.camera.lookAt(-1.361, -0.244, 0);
+        this.camera = new THREE.PerspectiveCamera(100, aspectRatio, 0.01, 1000);
     }
 
     private getAspectRatio(): number {
@@ -142,6 +162,16 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.renderer.render(this.scene, this.camera);
     }
 
+    public setView(viewId) {
+        this.camera.fov = this.views[viewId].camera.fov;
+        this.camera.updateProjectionMatrix();
+
+        this.camera.position.set(this.views[viewId].camera.location.x, this.views[viewId].camera.location.y, this.views[viewId].camera.location.z);
+        this.camera.lookAt(this.views[viewId].camera.lookAt);
+
+        this.views[viewId].userActiveVisualizer = this.userActiveVisualizer;
+    }
+
     @HostListener("window:resize", ["$event"])
     onResize(event) {
         this.canvas.style.width = "100%";
@@ -174,6 +204,15 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 break;
             case "4":
                 this.userActiveVisualizer = this.visualizersService.createVisualizer("comp", this.scene);
+                break;
+
+            case "[":
+                this.currentView = "multi";
+                this.setView(this.currentView);
+                break;
+            case "]":
+                this.currentView = "single";
+                this.setView(this.currentView);
                 break;
 
             case "w":
@@ -374,12 +413,12 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 component.scrollVisualizers = component.scrollVisualizers <= 0.0 ? 0.0 : component.scrollVisualizers >= 1.0 ? 1.0 : component.scrollVisualizers;
                 component.placeVisualizers();
 
-                // component.camera.translateX(component.cameraMoveDelta.x);
-                // component.camera.translateY(component.cameraMoveDelta.y);
-                // component.camera.translateZ(component.cameraMoveDelta.z);
+                component.camera.translateX(component.cameraMoveDelta.x);
+                component.camera.translateY(component.cameraMoveDelta.y);
+                component.camera.translateZ(component.cameraMoveDelta.z);
 
-                // component.camera.rotateOnWorldAxis(WORLD_YAW_AXIS, component.cameraLookDelta.y);
-                // component.camera.rotateOnAxis(WORLD_PITCH_AXIS, component.cameraLookDelta.x);
+                component.camera.rotateOnWorldAxis(WORLD_YAW_AXIS, component.cameraLookDelta.y);
+                component.camera.rotateOnAxis(WORLD_PITCH_AXIS, component.cameraLookDelta.x);
 
                 component.render();
 
@@ -397,7 +436,10 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.createScene();
         this.createLight();
         this.createCamera();
+
+        this.setView("multi");
         this.placeVisualizers();
+
         this.startRendering();
     }
 }

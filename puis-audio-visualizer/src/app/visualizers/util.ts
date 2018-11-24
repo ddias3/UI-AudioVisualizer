@@ -118,7 +118,7 @@ function createCircle(size: number, thickness: number, resolution: number): THRE
     var verticesAttribute = THREE["BufferGeometryUtils"].mergeBufferAttributes(verticesAttributes);
     geometry.addAttribute("position", verticesAttribute);
 
-    var material = new THREE.MeshLambertMaterial({
+    var material = new THREE.MeshBasicMaterial({
         transparent : true,
         opacity : 0.75,
         color : 0x00FF00,
