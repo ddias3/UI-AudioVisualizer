@@ -201,12 +201,8 @@ const AUDIO_NORMALIZATION = [
 })
 export class VisualizersService {
 
-    private _visualizers = {
-        identity : [],
-        eq : [],
-        comp : [],
-        noise : []
-    };
+        // This should be a linked list, but I don't have one ready to go.
+    private _visualizers = [];
     private _visualizerFactory: VisualizerFactory;
 
     private visualizerFactory: VisualizerFactory;
@@ -216,75 +212,43 @@ export class VisualizersService {
     }
 
     public get visualizers(): Array<any> {
-        var returnArray = [];
-        var totalIndex = 0;
-        var total = this.numberVisualizers();
-        var visualizersIndex = Object.keys(this._visualizers).reduce((obj, key) => obj[key] = 0, {});
-        while (totalIndex < total) {
-            for (var visKey in visualizersIndex) {
-                var current = this._visualizers[visKey][visualizersIndex[visKey]];
-                if (current !== undefined && current.order === totalIndex) {
-                    returnArray.push(current.ref);
-                    visualizersIndex[visKey]++;
-                    totalIndex++;
-                }
-            }
-        }
-        return returnArray;
+        return this._visualizers;
     }
 
     private numberVisualizers(): number {
-        return Object.keys(this._visualizers).reduce((total, key) => total + this._visualizers[key].length, 0);
+        return this._visualizers.length;
     }
 
     public createVisualizer(type: string, scene: THREE.Scene) {
         var newVisualizer;
         switch (type) {
             case "eq":
-                this._visualizers["eq"].push({
-                    ref : newVisualizer = this._visualizerFactory.eq(CIRCLES, WAVES),
-                    order : this.numberVisualizers()
-                });
+                this._visualizers.push(newVisualizer = this._visualizerFactory.eq(CIRCLES, WAVES));
                 break;
             case "identity":
-                this._visualizers["identity"].push({
-                    ref : newVisualizer = this._visualizerFactory.identity(),
-                    order : this.numberVisualizers()
-                });
+                this._visualizers.push(newVisualizer = this._visualizerFactory.identity());
                 break;
             case "noise":
-                this._visualizers["noise"].push({
-                    ref : newVisualizer = this._visualizerFactory.noise(),
-                    order : this.numberVisualizers()
-                });
+                this._visualizers.push(newVisualizer = this._visualizerFactory.noise());
                 break;
             case "comp":
-                this._visualizers["comp"].push({
-                    ref : newVisualizer = this._visualizerFactory.comp(),
-                    order : this.numberVisualizers()
-                });
+                this._visualizers.push(newVisualizer = this._visualizerFactory.comp());
                 break;
         }
         newVisualizer.addToScene(scene);
         return newVisualizer;
     }
 
-    public placeOrder(visualizer: any, newPLacement: number) {
-        var returnArray = [];
-        var totalIndex = 0;
-        var total = this.numberVisualizers();
-        var visualizersIndex = Object.keys(this._visualizers).reduce((obj, key) => obj[key] = 0, {});
-        while (totalIndex < total) {
-            for (var visKey in visualizersIndex) {
-                var current = this._visualizers[visKey][visualizersIndex[visKey]];
-                if (current !== undefined && current.order === totalIndex) {
-                    returnArray.push(current.ref);
-                    visualizersIndex[visKey]++;
-                    totalIndex++;
-                }
-            }
-        }
-        return returnArray;
+    public placeOrder(visualizer: any, newPlacement: number) {
+        var oldIndex = 0;
+        while (visualizer !== this._visualizers[oldIndex])
+            ++oldIndex;
+
+        this._visualizers.splice(newPlacement, 0, this._visualizers.splice(oldIndex, 1)[0]);
+    }
+
+    public updateVisualizers(freqValues: number[]) {
+        
     }
 
     // public populateScene() {

@@ -8,7 +8,7 @@ export default class VisualizerEQ {
     private circles: Array<THREE.Mesh>;
     private waves: Array<THREE.Mesh>;
 
-    constructor(options: Object, circlesConfig: Array<any>, wavesConfig: Object) {
+    constructor(circlesConfig: Array<any>, wavesConfig: Object) {
         this.circlesConfig = circlesConfig;
         this.wavesConfig = wavesConfig;
 

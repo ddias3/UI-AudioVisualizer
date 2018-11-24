@@ -53,10 +53,10 @@ THREE["BufferGeometryUtils"] = {
 @Injectable({
     providedIn: 'root'
 })
-export class VisualizerFactory {
+export default class VisualizerFactory {
 
-    public eq(options: Object, circlesConfig: Array<any>, wavesConfig: Object) {
-        return new VisualizerEQ(options, circlesConfig, wavesConfig);
+    public eq(circlesConfig: Array<any>, wavesConfig: Object) {
+        return new VisualizerEQ(circlesConfig, wavesConfig);
     }
 
     public comp() {

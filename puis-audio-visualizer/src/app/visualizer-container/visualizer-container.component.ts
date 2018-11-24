@@ -1,7 +1,7 @@
 import { Component, HostListener, ViewChild, AfterViewInit, ElementRef } from '@angular/core';
 import * as THREE from 'three';
 
-import { VisualizerFactory } from "../visualizers/visualizer-factory.service";
+import { VisualizersService } from "../visualizers/visualizers.service";
 
 @Component({
     selector: 'visualizer-container',
@@ -17,212 +17,13 @@ export class VisualizerContainerComponent implements AfterViewInit {
     private camera: THREE.PerspectiveCamera;
     public scene: THREE.Scene;
 
-    private visualizers: Array<any> = [];
-
-    private testVisualizer0;
-    private testVisualizer1;
-    private testVisualizer2;
-    private testVisualizerIdentities = [];
-
-    private visualizerFactory: VisualizerFactory;
-
     @ViewChild("visualizers")
     canvasRef: ElementRef;
 
+    private visualizersService: VisualizersService;
+    private userActiveVisualizer;
+
     private pathCurve: THREE.CubicBezierCurve3;
-
-    private waveFunc = x => Math.sin(x * Math.PI);
-    private waveFuncNeg = x => - 4*x + 4*x*x; // 1 - (2*x - 1) * (2*x - 1)
-    private CIRCLES = [
-        {
-            radius : 3.6,
-            thickness : 0.08,
-            resolution : 256
-        },
-        {
-            radius : 2.6,
-            thickness : 0.065,
-            resolution : 128
-        },
-        {
-            radius : 1.8,
-            thickness : 0.045,
-            resolution : 128
-        },
-        {
-            radius : 1.25,
-            thickness : 0.04,
-            resolution : 64
-        },
-        {
-            radius : 0.8,
-            thickness : 0.04,
-            resolution : 64
-        },
-        {
-            radius : 0.42,
-            thickness : 0.045,
-            resolution : 32
-        }
-    ];
-    private WAVES = {
-        freq : [
-            {
-                step : 6.0 * Math.PI / 12 + 0.2,
-                wave : this.waveFunc,
-                amplitude : 1.0,
-                // amplitude : 0.72,
-                startAngle : null,
-                radius : 3.6,
-                arcLength : 6.6 * Math.PI / 12,
-                displayThickness : 0.08,
-                resolution : 64,
-                rotationMultiplier : 1.0
-            },
-            {
-                step : 2.8 * Math.PI / 12 - 0.04,
-                wave : this.waveFuncNeg,
-                amplitude : 0.84,
-                // amplitude : 0.56,
-                startAngle : null,
-                radius : 3.6,
-                arcLength : 2.8 * Math.PI / 12,
-                displayThickness : 0.07,
-                resolution : 32,
-                rotationMultiplier : -1.1
-            },
-            {
-                step : 4.1 * Math.PI / 12 - 0.12,
-                wave : this.waveFunc,
-                amplitude : 0.76,
-                // amplitude : 0.48,
-                startAngle : null,
-                radius : 2.6,
-                arcLength : 4.1 * Math.PI / 12,
-                displayThickness : 0.06,
-                resolution : 24,
-                rotationMultiplier : 1.25
-            },
-            {
-                step : 2.5 * Math.PI / 12,
-                wave : this.waveFuncNeg,
-                amplitude : 0.70,
-                // amplitude : 0.42,
-                startAngle : null,
-                radius : 2.6,
-                arcLength : 2.5 * Math.PI / 12,
-                displayThickness : 0.05,
-                resolution : 24,
-                rotationMultiplier : -1.55
-            },
-            {
-                step : 2.8 * Math.PI / 12,
-                wave : this.waveFunc,
-                amplitude : 0.73,
-                // amplitude : 0.45,
-                startAngle : null,
-                radius : 1.8,
-                arcLength : 2.8 * Math.PI / 12,
-                displayThickness : 0.04,
-                resolution : 16,
-                rotationMultiplier : 1.9
-            },
-            {
-                step : 1.5 * Math.PI / 12,
-                wave : this.waveFuncNeg,
-                amplitude : 0.60,
-                // amplitude : 0.32,
-                startAngle : null,
-                radius : 1.8,
-                arcLength : 1.5 * Math.PI / 12,
-                displayThickness : 0.04,
-                resolution : 12,
-                rotationMultiplier : -2.3
-            },
-            {
-                step : 1.2 * Math.PI / 12,
-                wave : this.waveFunc,
-                amplitude : 0.58,
-                // amplitude : 0.3,
-                startAngle : null,
-                radius : 1.25,
-                arcLength : 1.2 * Math.PI / 12,
-                displayThickness : 0.04,
-                resolution : 10,
-                rotationMultiplier : 2.75
-            },
-            {
-                step : 0.85 * Math.PI / 12,
-                wave : this.waveFuncNeg,
-                amplitude : 0.55,
-                // amplitude : 0.27,
-                startAngle : null,
-                radius : 1.25,
-                arcLength : 0.8 * Math.PI / 12,
-                displayThickness : 0.04,
-                resolution : 12,
-                rotationMultiplier : -3.15
-            },
-            {
-                step : 0.7 * Math.PI / 12,
-                wave : this.waveFunc,
-                amplitude : 0.50,
-                // amplitude : 0.22,
-                startAngle : null,
-                radius : 0.8,
-                arcLength : 0.62 * Math.PI / 12,
-                displayThickness : 0.05,
-                resolution : 8,
-                rotationMultiplier : 3.6
-            },
-            {
-                step : 0.65 * Math.PI / 12,
-                wave : this.waveFuncNeg,
-                amplitude : 0.48,
-                // amplitude : 0.2,
-                startAngle : null,
-                radius : 0.8,
-                arcLength : 0.54 * Math.PI / 12,
-                displayThickness : 0.05,
-                resolution : 4,
-                rotationMultiplier : -4.0
-            },
-            {
-                step : 0.6 * Math.PI / 12,
-                wave : this.waveFunc,
-                amplitude : 0.47,
-                // amplitude : 0.19,
-                startAngle : null,
-                radius : 0.42,
-                arcLength : 0.48 * Math.PI / 12,
-                displayThickness : 0.06,
-                resolution : 4,
-                rotationMultiplier : 4.5
-            },
-            {
-                step : 0.8 * Math.PI / 12,
-                wave : this.waveFuncNeg,
-                amplitude : 0.60,
-                // amplitude : 0.12,
-                startAngle : null,
-                radius : 0.42,
-                arcLength : 0.45 * Math.PI / 12,
-                displayThickness : 0.06,
-                resolution : 3,
-                rotationMultiplier : -5.0
-            }
-        ]
-    };
-    private AUDIO_NORMALIZATION = [
-            // Low Freq
-        250, 189, 180, 180,
-
-            // Mid Freq
-        170, 165, 166, 163,
-
-            // High Freq
-        155, 165, 180, 190
-    ];
 
     private scrollVisualizers: number = 0.5;
     private spacingFunc = function () {
@@ -241,20 +42,21 @@ export class VisualizerContainerComponent implements AfterViewInit {
     }();
 
     private placeVisualizers() {
+        var visualizers = this.visualizersService.visualizers;
         var splineT = [];
-        for (var n = 0; n < this.visualizers.length; ++n)
-            splineT.push(n / this.visualizers.length);
+        for (var n = 0; n < visualizers.length; ++n)
+            splineT.push(n / visualizers.length);
 
         var actualSplineT = [];
-        for (var n = 0; n < this.visualizers.length; ++n)
-            actualSplineT.push(this.spacingFunc((n / this.visualizers.length) + this.scrollVisualizers - 0.45));
+        for (var n = 0; n < visualizers.length; ++n)
+            actualSplineT.push(this.spacingFunc((n / visualizers.length) + this.scrollVisualizers - 0.45));
 
-        for (var n = 0; n < this.visualizers.length; ++n)
-            this.visualizers[n].setPosition(this.pathCurve.getPoint(actualSplineT[n]));
+        for (var n = 0; n < visualizers.length; ++n)
+            visualizers[n].setPosition(this.pathCurve.getPoint(actualSplineT[n]));
     }
 
-    constructor(visualizerFactory: VisualizerFactory) {
-        this.visualizerFactory = visualizerFactory;
+    constructor(visualizersService: VisualizersService) {
+        this.visualizersService = visualizersService;
         this.render = this.render.bind(this);
     }
 
@@ -270,53 +72,13 @@ export class VisualizerContainerComponent implements AfterViewInit {
             new THREE.Vector3(5, -3, 5),
         );
 
-        var line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(this.pathCurve.getPoints(64)), new THREE.LineBasicMaterial({ color : 0xFFFFFF }));
+        // var line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(this.pathCurve.getPoints(64)), new THREE.LineBasicMaterial({ color : 0xFFFFFF }));
 
         this.scene = new THREE.Scene();
         // this.scene.add(new THREE.AxesHelper(8));
         // this.scene.add(line);
 
-        this.testVisualizer0 = this.visualizerFactory.eq({}, this.CIRCLES, this.WAVES);
-        this.testVisualizer0.addToScene(this.scene);
-        // this.testVisualizer0.setPosition(new THREE.Vector3(0, 0, 0));
-        // this.testVisualizer0.setPosition(this.pathCurve.getPoint(0.5));
-
-        this.testVisualizer1 = this.visualizerFactory.noise();
-        this.testVisualizer1.addToScene(this.scene);
-
-        this.testVisualizer2 = this.visualizerFactory.comp();
-        this.testVisualizer2.addToScene(this.scene);
-
-        this.testVisualizerIdentities = [
-            // this.visualizerFactory.identity(),
-            // this.visualizerFactory.identity(),
-            // this.visualizerFactory.identity(),
-            // this.visualizerFactory.identity(),
-            // this.visualizerFactory.identity(),
-            this.visualizerFactory.identity(),
-            this.visualizerFactory.identity(),
-            this.visualizerFactory.identity(),
-            this.visualizerFactory.identity(),
-            this.visualizerFactory.identity(),
-            this.visualizerFactory.identity(),
-            this.visualizerFactory.identity()
-        ];
-        this.testVisualizerIdentities.forEach(visualizer => {
-            visualizer.addToScene(this.scene);
-            // visualizer.setPosition(this.pathCurve.getPoint(Math.random()));
-        });
-
-        for (var n = 0; n < this.testVisualizerIdentities.length; ++n) {
-            if (n == 1)
-                this.visualizers.push(this.testVisualizer2);
-            else if (n == 5)
-                this.visualizers.push(this.testVisualizer0);
-            else if (n == 6)
-                this.visualizers.push(this.testVisualizer1);
-            this.visualizers.push(this.testVisualizerIdentities[n]);
-        }
-
-        this.placeVisualizers();
+        this.visualizersService.createVisualizer("identity", this.scene);
     }
 
     private createLight() {
@@ -365,7 +127,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         // this.renderer.setClearColor(0xFFFFFF, 1);
-        this.renderer.setClearColor(0x000000, 1);
+        this.renderer.setClearColor(0x080808, 1);
         this.renderer.autoClear = true;
 
         let component: VisualizerContainerComponent = this;
@@ -401,6 +163,19 @@ export class VisualizerContainerComponent implements AfterViewInit {
         console.log("Key Down: " + event.key);
 
         switch (event.key) {
+            case "1":
+                this.userActiveVisualizer = this.visualizersService.createVisualizer("identity", this.scene);
+                break;
+            case "2":
+                this.userActiveVisualizer = this.visualizersService.createVisualizer("eq", this.scene);
+                break;
+            case "3":
+                this.userActiveVisualizer = this.visualizersService.createVisualizer("noise", this.scene);
+                break;
+            case "4":
+                this.userActiveVisualizer = this.visualizersService.createVisualizer("comp", this.scene);
+                break;
+
             case "w":
                 this.cameraMoveDelta.z = -0.08;
                 break;
@@ -544,41 +319,41 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
             var rotation = 0.0;
 
-            function updateVisualizer() {
-                rotation += 0.004;
-                analyser.getByteFrequencyData(dataArray);
+            // function updateVisualizer() {
+            //     rotation += 0.004;
+            //     analyser.getByteFrequencyData(dataArray);
 
-                var stepSize = Math.floor(analyser.frequencyBinCount / (component.AUDIO_NORMALIZATION.length + 4));
-                var freqValues = [];
+            //     var stepSize = Math.floor(analyser.frequencyBinCount / (component.AUDIO_NORMALIZATION.length + 4));
+            //     var freqValues = [];
 
-                for (var n = 0; n < component.AUDIO_NORMALIZATION.length; ++n) {
-                // for (var n = analyser.frequencyBinCount - stepSize; n >= 0; n -= stepSize) {
-                    var binIndex = n * stepSize;
-                    var value = dataArray[binIndex];
-                    freqValues.push(value / component.AUDIO_NORMALIZATION[n]);
-                }
+            //     for (var n = 0; n < component.AUDIO_NORMALIZATION.length; ++n) {
+            //     // for (var n = analyser.frequencyBinCount - stepSize; n >= 0; n -= stepSize) {
+            //         var binIndex = n * stepSize;
+            //         var value = dataArray[binIndex];
+            //         freqValues.push(value / component.AUDIO_NORMALIZATION[n]);
+            //     }
 
-                component.testVisualizer0.rotate(0.004);
-                component.testVisualizer0.morphWaves(freqValues);
-                // component.testVisualizer.setPosition(component.pathCurve.getPoint(-0.5 * component.waveFunc(rotation * 0.5) + 0.5));
+            //     component.testVisualizer0.rotate(0.004);
+            //     component.testVisualizer0.morphWaves(freqValues);
+            //     // component.testVisualizer.setPosition(component.pathCurve.getPoint(-0.5 * component.waveFunc(rotation * 0.5) + 0.5));
 
-                freqValues = [];
-                for (var n = 0; n < 32; ++n) {
-                    var binIndex = Math.floor(n * analyser.frequencyBinCount / 42);
-                    var value = dataArray[binIndex];
-                    freqValues.push(value / 250);
-                }
+            //     freqValues = [];
+            //     for (var n = 0; n < 32; ++n) {
+            //         var binIndex = Math.floor(n * analyser.frequencyBinCount / 42);
+            //         var value = dataArray[binIndex];
+            //         freqValues.push(value / 250);
+            //     }
 
-                component.testVisualizerIdentities.forEach(visualizer => {
-                    visualizer.morphBars(freqValues);
-                });
+            //     component.testVisualizerIdentities.forEach(visualizer => {
+            //         visualizer.morphBars(freqValues);
+            //     });
 
-                component.render();
+            //     component.render();
 
-                requestAnimationFrame(updateVisualizer);
-            }
+            //     requestAnimationFrame(updateVisualizer);
+            // }
 
-            updateVisualizer();
+            // updateVisualizer();
         }
 
         function testCameraControls() {
@@ -593,42 +368,18 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 for (var n = 0; n < 12; ++n)
                     freqValues.push(Math.random());
 
-                component.testVisualizer0.rotate(0.004);
-                component.testVisualizer0.morphWaves(freqValues);
-
-                component.testVisualizer1.morphGate(Math.random());
-                component.testVisualizer1.morphDisplay(Math.random());
-
-                component.testVisualizer2.morphCompression(Math.random(), Math.random());
-                component.testVisualizer2.morphDisplay(Math.random());
-
-                freqValues = [];
-                for (var n = 0; n < 32; ++n) {
-                    freqValues.push(Math.random());
-                }
-
-                component.testVisualizerIdentities.forEach(visualizer => {
-                    visualizer.morphBars(freqValues);
-                });
+                component.visualizersService.updateVisualizers(freqValues);
 
                 component.scrollVisualizers += component.scrollDelta;
                 component.scrollVisualizers = component.scrollVisualizers <= 0.0 ? 0.0 : component.scrollVisualizers >= 1.0 ? 1.0 : component.scrollVisualizers;
                 component.placeVisualizers();
 
-                // console.log(component.cameraMoveDelta);
-                    // This math is wrong.
-                // var cameraMove: THREE.Vector3 = component.cameraMoveDelta.clone().applyMatrix4(component.camera.matrix);
-                // component.camera.add(cameraMove);
+                // component.camera.translateX(component.cameraMoveDelta.x);
+                // component.camera.translateY(component.cameraMoveDelta.y);
+                // component.camera.translateZ(component.cameraMoveDelta.z);
 
-                component.camera.translateX(component.cameraMoveDelta.x);
-                component.camera.translateY(component.cameraMoveDelta.y);
-                component.camera.translateZ(component.cameraMoveDelta.z);
-
-                component.camera.rotateOnWorldAxis(WORLD_YAW_AXIS, component.cameraLookDelta.y);
-                component.camera.rotateOnAxis(WORLD_PITCH_AXIS, component.cameraLookDelta.x);
-
-                // console.log(component.camera.getWorldPosition(new THREE.Vector3(0, 0, 0)));
-                // console.log(component.camera.getWorldDirection(new THREE.Vector3(0, 0, 0)));
+                // component.camera.rotateOnWorldAxis(WORLD_YAW_AXIS, component.cameraLookDelta.y);
+                // component.camera.rotateOnAxis(WORLD_PITCH_AXIS, component.cameraLookDelta.x);
 
                 component.render();
 
@@ -646,6 +397,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.createScene();
         this.createLight();
         this.createCamera();
+        this.placeVisualizers();
         this.startRendering();
     }
 }
