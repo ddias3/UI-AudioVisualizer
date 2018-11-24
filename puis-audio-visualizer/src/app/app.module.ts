@@ -12,6 +12,7 @@ import { VisualizersService } from './visualizers/visualizers.service';
 import { InfoEquilizerComponent } from './info-equilizer/info-equilizer.component';
 import { InfoNoiseGateComponent } from './info-noise-gate/info-noise-gate.component';
 import { InfoCompressionComponent } from './info-compression/info-compression.component';
+import { MainService } from './app-service/app-service.service';
 
 @NgModule({
   declarations: [
@@ -30,7 +31,8 @@ import { InfoCompressionComponent } from './info-compression/info-compression.co
   ],
   providers: [
     VisualizerFactory,
-    VisualizersService
+    VisualizersService,
+    MainService
   ],
   bootstrap: [AppComponent]
 })

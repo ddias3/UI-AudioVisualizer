@@ -2,6 +2,7 @@ import { Component, HostListener, ViewChild, AfterViewInit, ElementRef } from '@
 import * as THREE from 'three';
 
 import { VisualizersService } from "../visualizers/visualizers.service";
+import { MainService } from "../app-service/app-service.service";
 
 @Component({
     selector: 'visualizer-container',
@@ -20,9 +21,9 @@ export class VisualizerContainerComponent implements AfterViewInit {
     @ViewChild("visualizers")
     canvasRef: ElementRef;
 
+    private mainService: MainService;
     private visualizersService: VisualizersService;
 
-    private currentView = "multi";
     private views = {
         multi : {
             userActiveVisualizer : undefined,
@@ -41,8 +42,6 @@ export class VisualizerContainerComponent implements AfterViewInit {
             }
         }
     };
-
-    private userActiveVisualizer;
 
     private pathCurve: THREE.CubicBezierCurve3;
 
@@ -75,13 +74,19 @@ export class VisualizerContainerComponent implements AfterViewInit {
         for (var n = 0; n < visualizers.length; ++n)
             visualizers[n].setPosition(this.pathCurve.getPoint(actualSplineT[n]));
 
-        if (this.currentView === "single")
-            this.userActiveVisualizer.setPosition(this.views[this.currentView].camera.lookAt);        
+        if (this.mainService.getData("view") === "single")
+            this.mainService.getData("active").setPosition(this.views[this.mainService.getData("view")].camera.lookAt);        
     }
 
-    constructor(visualizersService: VisualizersService) {
+    constructor(mainService: MainService, visualizersService: VisualizersService) {
         this.visualizersService = visualizersService;
         this.render = this.render.bind(this);
+
+        var comp = this;
+        this.mainService = mainService;
+        this.mainService.registerEvent("onViewChange", function (newView) {
+            comp.setView(newView);
+        });
     }
 
     private get canvas(): HTMLCanvasElement {
@@ -102,8 +107,8 @@ export class VisualizerContainerComponent implements AfterViewInit {
         // this.scene.add(new THREE.AxesHelper(8));
         // this.scene.add(line);
 
-        this.userActiveVisualizer = this.visualizersService.createVisualizer("identity", this.scene);
-        this.userActiveVisualizer = this.visualizersService.createVisualizer("identity", this.scene);
+        this.visualizersService.createVisualizer("identity", this.scene);
+        this.mainService.trigger("onActiveChange", [this.visualizersService.createVisualizer("identity", this.scene)]);
     }
 
     private createLight() {
@@ -170,7 +175,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.camera.position.set(this.views[viewId].camera.location.x, this.views[viewId].camera.location.y, this.views[viewId].camera.location.z);
         this.camera.lookAt(this.views[viewId].camera.lookAt);
 
-        this.views[viewId].userActiveVisualizer = this.userActiveVisualizer;
+        this.views[viewId].userActiveVisualizer = this.mainService.getData("active");
     }
 
     @HostListener("window:resize", ["$event"])
@@ -192,32 +197,35 @@ export class VisualizerContainerComponent implements AfterViewInit {
     @HostListener("document:keydown", ["$event"])
     public onKeyDown(event: KeyboardEvent) {
         console.log("Key Down: " + event.key);
+        var newActiveVisualizer = undefined;
 
         switch (event.key) {
             case "1":
-                this.userActiveVisualizer = this.visualizersService.createVisualizer("identity", this.scene);
-                this.visualizersService.placeOrder(this.userActiveVisualizer, -2);
+                newActiveVisualizer = this.visualizersService.createVisualizer("identity", this.scene);
+                this.visualizersService.placeOrder(newActiveVisualizer, -2);
+                this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
                 break;
             case "2":
-                this.userActiveVisualizer = this.visualizersService.createVisualizer("eq", this.scene);
-                this.visualizersService.placeOrder(this.userActiveVisualizer, -2);
+                newActiveVisualizer = this.visualizersService.createVisualizer("eq", this.scene);
+                this.visualizersService.placeOrder(newActiveVisualizer, -2);
+                this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
                 break;
             case "3":
-                this.userActiveVisualizer = this.visualizersService.createVisualizer("noise", this.scene);
-                this.visualizersService.placeOrder(this.userActiveVisualizer, -2);
+                newActiveVisualizer = this.visualizersService.createVisualizer("noise", this.scene);
+                this.visualizersService.placeOrder(newActiveVisualizer, -2);
+                this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
                 break;
             case "4":
-                this.userActiveVisualizer = this.visualizersService.createVisualizer("comp", this.scene);
-                this.visualizersService.placeOrder(this.userActiveVisualizer, -2);
+                newActiveVisualizer = this.visualizersService.createVisualizer("comp", this.scene);
+                this.visualizersService.placeOrder(newActiveVisualizer, -2);
+                this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
                 break;
 
             case "[":
-                this.currentView = "multi";
-                this.setView(this.currentView);
+                this.mainService.trigger("onViewChange", ["multi"]);
                 break;
             case "]":
-                this.currentView = "single";
-                this.setView(this.currentView);
+                this.mainService.trigger("onViewChange", ["single"]);
                 break;
 
             case "w":
@@ -442,7 +450,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.createLight();
         this.createCamera();
 
-        this.setView("multi");
+        this.setView(this.mainService.getData("view"));
         this.placeVisualizers();
 
         this.startRendering();
