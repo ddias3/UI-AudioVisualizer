@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import * as util from "./util";
 
-export default class VisualizerNoiseGate {
+export class VisualizerNoiseGate {
     private gateCircle: THREE.Mesh;
     private audioCircle: THREE.Mesh;
 
@@ -79,7 +79,7 @@ export default class VisualizerNoiseGate {
         this.gateCircle.morphTargetInfluences[0] = cutOffVolume;
     }
 
-    public morphDisplay(amplitude: number) {
+    public morphAmplitude(amplitude: number) {
         this.audioCircle.morphTargetInfluences[0] = amplitude;
     }
 

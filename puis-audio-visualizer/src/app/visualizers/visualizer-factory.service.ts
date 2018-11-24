@@ -2,10 +2,10 @@ import { Injectable } from '@angular/core';
 import * as THREE from "three";
 
 import * as util from "./util";
-import VisualizerEQ from "./equilizer";
-import VisualizerComp from "./compression";
-import VisualizerNoiseGate from "./noiseGate";
-import VisualizerIdentity from "./identity";
+import { VisualizerEQ } from "./equilizer";
+import { VisualizerCompression } from "./compression";
+import { VisualizerNoiseGate } from "./noiseGate";
+import { VisualizerIdentity } from "./identity";
 
 // this is code from three.js that for some reason is inaccessible through the module import
 THREE["BufferGeometryUtils"] = {
@@ -53,14 +53,14 @@ THREE["BufferGeometryUtils"] = {
 @Injectable({
     providedIn: 'root'
 })
-export default class VisualizerFactory {
+export class VisualizerFactory {
 
     public eq(circlesConfig: Array<any>, wavesConfig: Object) {
         return new VisualizerEQ(circlesConfig, wavesConfig);
     }
 
     public comp() {
-        return new VisualizerComp({});
+        return new VisualizerCompression({});
     }
 
     public noise() {

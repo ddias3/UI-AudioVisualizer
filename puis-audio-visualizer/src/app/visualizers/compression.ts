@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import * as util from "./util";
 
-export default class VisualizerCompression {
+export class VisualizerCompression {
     private thresholdCircle: THREE.Mesh;
     private audioCircle: THREE.Mesh;
 
@@ -123,7 +123,7 @@ export default class VisualizerCompression {
         this.thresholdCircle = createThresholdCircle(new THREE.MeshBasicMaterial({
                 transparent : true,
                 opacity : 0.5,
-                color : 0xA0A000,
+                color : 0xFFFF00,
                 side : THREE.FrontSide,
                 morphTargets : true
             }), 3.6, 0.25, 1.5, 0.05, 128);
@@ -131,7 +131,7 @@ export default class VisualizerCompression {
         this.audioCircle = createAudioCircle(new THREE.MeshBasicMaterial({
                 transparent : true,
                 opacity : 0.3,
-                color : 0xFFFF00,
+                color : 0xA0A000,
                 side : THREE.FrontSide,
                 morphTargets : true
             }), 0.1, 0.1, 3.5, 0.05, 128);
@@ -146,7 +146,7 @@ export default class VisualizerCompression {
         this.thresholdCircle.morphTargetInfluences[1] = threshold;
     }
 
-    public morphDisplay(amplitude: number) {
+    public morphAmplitude(amplitude: number) {
         this.audioCircle.morphTargetInfluences[0] = amplitude;
     }
 

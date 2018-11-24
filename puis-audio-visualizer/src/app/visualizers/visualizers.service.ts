@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as THREE from "three";
 
-import VisualizerFactory from "./visualizer-factory.service";
+import { VisualizerFactory } from "./visualizer-factory.service";
 
 const waveFunc = x => Math.sin(x * Math.PI);
 const waveFuncNeg = x => - 4*x + 4*x*x; // 1 - (2*x - 1) * (2*x - 1)
@@ -41,7 +41,7 @@ const WAVES = {
     freq : [
         {
             step : 6.0 * Math.PI / 12 + 0.2,
-            wave : this.waveFunc,
+            wave : waveFunc,
             amplitude : 1.0,
             // amplitude : 0.72,
             startAngle : null,
@@ -53,7 +53,7 @@ const WAVES = {
         },
         {
             step : 2.8 * Math.PI / 12 - 0.04,
-            wave : this.waveFuncNeg,
+            wave : waveFuncNeg,
             amplitude : 0.84,
             // amplitude : 0.56,
             startAngle : null,
@@ -65,7 +65,7 @@ const WAVES = {
         },
         {
             step : 4.1 * Math.PI / 12 - 0.12,
-            wave : this.waveFunc,
+            wave : waveFunc,
             amplitude : 0.76,
             // amplitude : 0.48,
             startAngle : null,
@@ -77,7 +77,7 @@ const WAVES = {
         },
         {
             step : 2.5 * Math.PI / 12,
-            wave : this.waveFuncNeg,
+            wave : waveFuncNeg,
             amplitude : 0.70,
             // amplitude : 0.42,
             startAngle : null,
@@ -89,7 +89,7 @@ const WAVES = {
         },
         {
             step : 2.8 * Math.PI / 12,
-            wave : this.waveFunc,
+            wave : waveFunc,
             amplitude : 0.73,
             // amplitude : 0.45,
             startAngle : null,
@@ -101,7 +101,7 @@ const WAVES = {
         },
         {
             step : 1.5 * Math.PI / 12,
-            wave : this.waveFuncNeg,
+            wave : waveFuncNeg,
             amplitude : 0.60,
             // amplitude : 0.32,
             startAngle : null,
@@ -113,7 +113,7 @@ const WAVES = {
         },
         {
             step : 1.2 * Math.PI / 12,
-            wave : this.waveFunc,
+            wave : waveFunc,
             amplitude : 0.58,
             // amplitude : 0.3,
             startAngle : null,
@@ -125,7 +125,7 @@ const WAVES = {
         },
         {
             step : 0.85 * Math.PI / 12,
-            wave : this.waveFuncNeg,
+            wave : waveFuncNeg,
             amplitude : 0.55,
             // amplitude : 0.27,
             startAngle : null,
@@ -137,7 +137,7 @@ const WAVES = {
         },
         {
             step : 0.7 * Math.PI / 12,
-            wave : this.waveFunc,
+            wave : waveFunc,
             amplitude : 0.50,
             // amplitude : 0.22,
             startAngle : null,
@@ -149,7 +149,7 @@ const WAVES = {
         },
         {
             step : 0.65 * Math.PI / 12,
-            wave : this.waveFuncNeg,
+            wave : waveFuncNeg,
             amplitude : 0.48,
             // amplitude : 0.2,
             startAngle : null,
@@ -161,7 +161,7 @@ const WAVES = {
         },
         {
             step : 0.6 * Math.PI / 12,
-            wave : this.waveFunc,
+            wave : waveFunc,
             amplitude : 0.47,
             // amplitude : 0.19,
             startAngle : null,
@@ -173,7 +173,7 @@ const WAVES = {
         },
         {
             step : 0.8 * Math.PI / 12,
-            wave : this.waveFuncNeg,
+            wave : waveFuncNeg,
             amplitude : 0.60,
             // amplitude : 0.12,
             startAngle : null,
@@ -247,8 +247,22 @@ export class VisualizersService {
         this._visualizers.splice(newPlacement, 0, this._visualizers.splice(oldIndex, 1)[0]);
     }
 
-    public updateVisualizers(freqValues: number[]) {
-        
+    public updateVisualizers(amplitude: number, freqValues: number[]) {
+        var normalizedFreqValues12 = [];
+        for (var n = 0; n < 12; ++n)
+            normalizedFreqValues12.push(freqValues[n * Math.floor(freqValues.length / 16)]);
+        var freqValues32 = [];
+        for (var n = 0; n < 32; ++n)
+            freqValues32.push(freqValues[n * Math.floor(freqValues.length / 36)]);
+
+        for (var n = 0; n < this._visualizers.length; ++n) {
+            if (this._visualizers[n].morphAmplitude)
+                this._visualizers[n].morphAmplitude(amplitude);
+            if (this._visualizers[n].morphFreq12)
+                this._visualizers[n].morphFreq12(normalizedFreqValues12);
+            if (this._visualizers[n].morphFreq32)
+                this._visualizers[n].morphFreq32(freqValues32);
+        }
     }
 
     // public populateScene() {

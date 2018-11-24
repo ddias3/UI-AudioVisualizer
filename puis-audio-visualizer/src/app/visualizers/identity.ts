@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import * as util from "./util";
 
-export default class VisualizerIdentity {
+export class VisualizerIdentity {
     private root: THREE.Group;
     private bars: Array<THREE.Mesh>;
     private frame: THREE.Mesh;
@@ -86,7 +86,7 @@ export default class VisualizerIdentity {
         this.root.position.set(position.x, position.y, position.z);
     }
 
-    public morphBars(normalizedFreqValues: Array<number>) {
+    public morphFreq32(normalizedFreqValues: Array<number>) {
         if (normalizedFreqValues.length !== this.bars.length)
             throw new Error("Incompatible number of wave frequency values " + normalizedFreqValues.length);
 

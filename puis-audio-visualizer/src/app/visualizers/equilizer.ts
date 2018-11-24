@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import * as util from "./util";
 
-export default class VisualizerEQ {
+export class VisualizerEQ {
     private circlesConfig: Array<any>;
     private wavesConfig: Object;
 
@@ -60,7 +60,7 @@ export default class VisualizerEQ {
                 this.waves[n][m].rotateZ(value * this.wavesConfig["freq"][n].rotationMultiplier);
     }
 
-    public morphWaves(normalizedFreqValues: Array<number>) {
+    public morphFreq12(normalizedFreqValues: Array<number>) {
         if (normalizedFreqValues.length !== this.waves.length)
             throw new Error("Incompatible number of wave frequency values " + normalizedFreqValues.length);
 

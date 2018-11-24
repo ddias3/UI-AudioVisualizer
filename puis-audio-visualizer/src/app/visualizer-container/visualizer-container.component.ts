@@ -49,7 +49,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
         var actualSplineT = [];
         for (var n = 0; n < visualizers.length; ++n)
-            actualSplineT.push(this.spacingFunc((n / visualizers.length) + this.scrollVisualizers - 0.45));
+            actualSplineT.push(this.spacingFunc((n / visualizers.length) + 2 * this.scrollVisualizers - 0.5));
 
         for (var n = 0; n < visualizers.length; ++n)
             visualizers[n].setPosition(this.pathCurve.getPoint(actualSplineT[n]));
@@ -211,10 +211,10 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 break;
 
             case "n":
-                this.scrollDelta = 0.008;
+                this.scrollDelta = 0.004;
                 break;
             case "m":
-                this.scrollDelta = -0.008;
+                this.scrollDelta = -0.004;
                 break;
         }
     }
@@ -365,10 +365,10 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 rotation += 0.004;
 
                 var freqValues = [];
-                for (var n = 0; n < 12; ++n)
+                for (var n = 0; n < 256; ++n)
                     freqValues.push(Math.random());
 
-                component.visualizersService.updateVisualizers(freqValues);
+                component.visualizersService.updateVisualizers(Math.random(), freqValues);
 
                 component.scrollVisualizers += component.scrollDelta;
                 component.scrollVisualizers = component.scrollVisualizers <= 0.0 ? 0.0 : component.scrollVisualizers >= 1.0 ? 1.0 : component.scrollVisualizers;
