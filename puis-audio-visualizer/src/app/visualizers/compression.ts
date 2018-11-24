@@ -135,12 +135,15 @@ export default class VisualizerCompression {
                 side : THREE.FrontSide,
                 morphTargets : true
             }), 0.1, 0.1, 3.5, 0.05, 128);
+
+        this.thresholdCircle.morphTargetInfluences[0] = 1.0; // thickness, i.e. ratio
+        this.thresholdCircle.morphTargetInfluences[1] = 1.0; // size, i.e. threshold
+        this.thresholdCircle.morphTargetInfluences[2] = 0.0; // thickness and size, i.e. it's the first 2 together
     }
 
     public morphCompression(threshold: number, ratio: number) {
-        // this.thresholdCircle.morphTargetInfluences[1] = threshold;
         this.thresholdCircle.morphTargetInfluences[0] = ratio;
-        this.thresholdCircle.morphTargetInfluences[2] = ratio;
+        this.thresholdCircle.morphTargetInfluences[1] = threshold;
     }
 
     public morphDisplay(amplitude: number) {
