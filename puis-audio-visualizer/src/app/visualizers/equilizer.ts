@@ -8,11 +8,14 @@ export class VisualizerEQ {
     private circles: Array<THREE.Mesh>;
     private waves: Array<THREE.Mesh>;
 
+    public _filters;
+
     constructor(circlesConfig: Array<any>, wavesConfig: Object) {
         this.circlesConfig = circlesConfig;
         this.wavesConfig = wavesConfig;
 
         this.circles = circlesConfig.map(config => util.createCircle(config.radius, config.thickness, config.resolution));
+        this._filters = wavesConfig["freq"].map(__ignore => 1.0);
 
         //                 var mesh = util.createWave(freq.wave, arg1:freqValues[index] * freq.amplitude, startAngle + (arg0:rotation * freq.rotationMultiplier), freq.radius, freq.arcLength, freq.displayThickness, freq.resolution);
         //    ...
@@ -66,7 +69,16 @@ export class VisualizerEQ {
 
         for (var n = 0; n < this.waves.length; ++n) {
             for (var m = 0; m < this.waves[n].length; ++m) {
-                this.waves[n][m].morphTargetInfluences[0] = normalizedFreqValues[n];
+                this.waves[n][m].morphTargetInfluences[0] = this._filters[n] * normalizedFreqValues[n];
+            }
+        }
+    }
+
+    public deltaFilter(filters) {
+        for (var n = 0; n < this._filters.length; ++n) {
+            if (filters[n]) {
+                this._filters[n] += filters[n];
+                this._filters[n] = this._filters[n] <= 0.0 ? 0.0 : this._filters[n] >= 2.0 ? 1.0 : this._filters[n];
             }
         }
     }

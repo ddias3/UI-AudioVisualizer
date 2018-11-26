@@ -6,6 +6,11 @@ export class VisualizerCompression {
     private audioCircle: THREE.Mesh;
     private boundingBoxMesh: THREE.Mesh;
 
+    private lastAngle: number = 0;
+
+    public _ratio: number = 0.5;
+    public _threshold: number = 1.0;
+
     constructor(options: Object) {
         function createAudioCircle(material: THREE.Material, maxSize: number, minSize: number, maxThickness: number, minThickness: number, resolution: number): THREE.Mesh {
             if (resolution < 3)
@@ -139,18 +144,33 @@ export class VisualizerCompression {
 
         this.boundingBoxMesh = new THREE.Mesh(new THREE.BoxGeometry(5, 5, 0.05), new THREE.MeshBasicMaterial({ transparent : true, opacity : 0.0 }));
 
-        this.thresholdCircle.morphTargetInfluences[0] = 0.50; // thickness, i.e. ratio
-        this.thresholdCircle.morphTargetInfluences[1] = 1.0; // size, i.e. threshold
+        this.thresholdCircle.morphTargetInfluences[0] = this._ratio;     // thickness, i.e. ratio
+        this.thresholdCircle.morphTargetInfluences[1] = this._threshold; // size, i.e. threshold
         this.thresholdCircle.morphTargetInfluences[2] = 0.0; // thickness and size, i.e. it's the first 2 together
     }
 
-    public morphCompression(threshold: number, ratio: number) {
-        this.thresholdCircle.morphTargetInfluences[0] = ratio;
-        this.thresholdCircle.morphTargetInfluences[1] = threshold;
+    public morphCompression(threshold, ratio) {
+        if (ratio)
+            this.thresholdCircle.morphTargetInfluences[0] = this._ratio = ratio;
+        if (threshold)
+            this.thresholdCircle.morphTargetInfluences[1] = this._threshold = threshold;
     }
 
     public morphAmplitude(amplitude: number) {
         this.audioCircle.morphTargetInfluences[0] = amplitude;
+    }
+
+    public deltaCompression(threshold, ratio) {
+        if (ratio) {
+            this._ratio += ratio;
+            this._ratio = this._ratio <= 0.0 ? 0.0 : this._ratio >= 1.0 ? 1.0 : this._ratio;
+            this.thresholdCircle.morphTargetInfluences[0] = this._ratio;
+        }
+        if (threshold) {
+            this._threshold += threshold;
+            this._threshold = this._threshold <= 0.0 ? 0.0 : this._threshold >= 1.0 ? 1.0 : this._threshold;
+            this.thresholdCircle.morphTargetInfluences[1] = this._threshold;
+        }
     }
 
     public addToScene(scene: THREE.Scene): void {

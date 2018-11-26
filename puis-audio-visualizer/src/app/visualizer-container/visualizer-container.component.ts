@@ -33,7 +33,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
             camera : {
                 location : new THREE.Vector3(-6.0, 1.5, 10.15),
                 lookAt : new THREE.Vector3(-1.361, -0.244, 0),
-                fov : 45
+                fov : 55
             }
         },
         single : {
@@ -66,7 +66,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         };
     }();
 
-    private placeVisualizers() {
+    private placeVisualizers(rotation: number) {
         var visualizers = this.visualizersService.visualizers;
         var actualSplineT;
 
@@ -89,8 +89,11 @@ export class VisualizerContainerComponent implements AfterViewInit {
             actualSplineT = [ this.spacingFunc(0.0), this.spacingFunc(100) ];
         }
 
-        for (var n = 0; n < visualizers.length; ++n)
+        for (var n = 0; n < visualizers.length; ++n) {
             visualizers[n].setPosition(this.pathCurve.getPoint(actualSplineT[n]));
+            // if (visualizers[n].rotate)
+            //     visualizers[n].rotate(rotation);
+        }
 
         if (this.currentDraggingVisualizer)
             this.currentDraggingVisualizer.setPosition(this.currentDraggedLocation);
@@ -230,12 +233,12 @@ export class VisualizerContainerComponent implements AfterViewInit {
         if (!this.currentDraggingLeftButton && event.center.x > this.newVisualizersButtons[0].right) {
             this.currentDraggingLeftButton = true;
         }
-        else if (event.center.x < 20 && this.currentDraggingLeftButton) {
+        else if (event.center.x < 30 && this.currentDraggingLeftButton) {
             this.visualizersService.removeVisualizer(this.currentDraggingVisualizer, this.scene);
             this.currentDraggingVisualizer = undefined;
             this.mainService.trigger("setActive", [this.currentDraggingVisualizer]);
         }
-        else if (event.center.y < 10) {
+        else if (event.center.y < 20 && this.currentDraggingVisualizer) {
             this.mainService.trigger("setActive", [this.currentDraggingVisualizer]);
             this.mainService.trigger("onViewChange", ["single"]);
         }
@@ -297,30 +300,37 @@ export class VisualizerContainerComponent implements AfterViewInit {
         var comp = this;
         comp.hammerInstance = new Hammer(document.body);
         comp.hammerInstance.get("rotate").set({ enable : true });
-        comp.hammerInstance.get("pinch").set({ enable : true });
+        // comp.hammerInstance.get("pinch").set({ enable : true, threshold : 0 });
         comp.hammerInstance.add(new Hammer.Pan({ direction : Hammer.DIRECTION_ALL, threshold : 0 }));
         comp.hammerInstance.add(new Hammer.Swipe({ direction : Hammer.DIRECTION_HORIZONTAL }));
-        comp.hammerInstance.get("swipe").recognizeWith(comp.hammerInstance.get("pan"));
+        // comp.hammerInstance.get("swipe").recognizeWith(comp.hammerInstance.get("pan"));
 
-        comp.hammerInstance.on("swipeleft", function back(event) {
-            console.log("swipeleft");
-            switch (comp.mainService.getView()) {
-                case "single":
-                    if (event.distance > 0.7 * comp.canvas.clientWidth) {
-                        comp.mainService.trigger("back", []);
-                    }
-                    break;
-            }
-        });
+        // comp.hammerInstance.on("swipeleft", function back(event) {
+        //     console.log("swipeleft");
+        //     switch (comp.mainService.getView()) {
+        //         case "single":
+        //             if (event.distance > 0.7 * comp.canvas.clientWidth) {
+        //                 comp.mainService.trigger("back", []);
+        //             }
+        //             break;
+        //     }
+        // });
 
         comp.hammerInstance.on("panend", function clickAndDrag(event) {
-            console.log("(" + event.deltaX + ", " + event.deltaY + ")");
             switch (comp.mainService.getView()) {
                 case "multi":
                     comp.currentDraggingVisualizer = undefined;
                     comp.scrollDelta = 0.0;
                     comp.currentDraggingNewVisualizer = false;
                     comp.currentDraggingLeftButton = false;
+                    break;
+                case "single":
+                    if (event.distance > 0.75 * comp.canvas.clientWidth) {
+                        comp.mainService.trigger("back", []);
+                    }
+                    else {
+                        comp.mainService.trigger("panend", [event]);
+                    }
                     break;
             }
         });
@@ -356,14 +366,19 @@ export class VisualizerContainerComponent implements AfterViewInit {
                         }
                     }
                     break;
+                case "single":
+                    comp.mainService.trigger("panstart", [event]);
+                    break;
             }
         });
 
         comp.hammerInstance.on("panmove", function clickAndDrag(event) {
-            console.log("(" + event.deltaX + ", " + event.deltaY + ")");
             switch (comp.mainService.getView()) {
                 case "multi":
                     comp.multiViewDrag(event);
+                    break;
+                case "single":
+                    comp.mainService.trigger("pan", [event]);
                     break;
             }
         });
@@ -376,11 +391,140 @@ export class VisualizerContainerComponent implements AfterViewInit {
             }
         });
 
-        comp.hammerInstance.on("pinch", function twoFingerZoom(event) {
-            switch (comp.mainService.getView()) {
-                case "single":
-                    comp.mainService.trigger("pinch", [event]);
+        // comp.hammerInstance.on("pinch", function twoFingerZoom(event) {
+        //     switch (comp.mainService.getView()) {
+        //         case "single":
+        //             comp.mainService.trigger("pinch", [event]);
+        //             break;
+        //     }
+        // });
+    }
+
+    private setupVisualizerControls() {
+        var comp = this;
+        comp.mainService.registerEvent("rotate", event => {
+            switch (comp.mainService.getActiveType()) {
+                case "comp":
+                    var visComp = comp.mainService.getActive();
+                    visComp.deltaCompression(undefined, event.angle / 10000); // THIS IS SO JANKY!
+                    comp.mainService.trigger("setCompRatio", [visComp._ratio]);
                     break;
+            }
+        });
+
+        comp.mainService.registerEvent("pan", event => {
+            switch (comp.mainService.getActiveType()) {
+                case "noise":
+                    var visComp = comp.mainService.getActive();
+                    visComp.deltaNoise(-event.deltaY / 5000);
+                    comp.mainService.trigger("setNoiseThreshold", [visComp._threshold]);
+                    break;
+                case "comp":
+                    var visComp = comp.mainService.getActive();
+                    visComp.deltaCompression(-event.deltaY / 5000);
+                    comp.mainService.trigger("setCompThreshold", [visComp._threshold]);
+                    break;
+            }
+        });
+
+        // case "eq":
+        //     var visEq = comp.mainService.getActive();
+        //     var frequency = event.distance * ((0.8 * comp.canvas.clientHeight) / 24);
+        //     var frequencyIndex = Math.floor(1 - frequency / 12);
+        //     var newValues = [event.distance];
+        //     for (var n = 0; n < 11; ++n)
+        //         if (n === frequencyIndex)
+        //             newValues.push(event.angle / 10000);
+        //         else
+        //             newValues.push(undefined);
+        //     comp.mainService.trigger("setEqFilters", [visEq._filters]);
+        //     break;
+
+        var filterCutOffStart = undefined;
+        var screenCenter;
+        function createRotationMatrix(radian) {
+            var rotationMatrix = new THREE.Matrix3();
+            rotationMatrix.set(Math.cos(radian), -Math.sin(radian), 0,     Math.sin(radian), Math.cos(radian), 0,    0, 0, 1);
+            return rotationMatrix;
+        }
+        const frequencyScreenMapping = [0.05, 0.1, 0.15, 0.2,
+                                        0.3, 0.36, 0.42, 0.52,
+                                        0.65, 0.78, 0.86, 0.95];
+        comp.mainService.registerEvent("panstart", event => {
+            if (comp.mainService.getActiveType() === "eq") {
+                console.log("EQ performing panstart");
+                screenCenter = {
+                    x : comp.canvas.clientWidth / 2,
+                    y : comp.canvas.clientHeight / 2
+                };
+                filterCutOffStart = event.center;
+            }
+        });
+        comp.mainService.registerEvent("panend", event => {
+            if (comp.mainService.getActiveType() === "eq" && filterCutOffStart) {
+                var path = {
+                    start : new THREE.Vector2((filterCutOffStart.x - screenCenter.x) / comp.canvas.clientHeight,
+                                              -(filterCutOffStart.y - screenCenter.y) / comp.canvas.clientHeight),
+                    end : new THREE.Vector2((event.center.x - screenCenter.x) / comp.canvas.clientHeight,
+                                            -(event.center.y - screenCenter.y) / comp.canvas.clientHeight),
+                };
+                filterCutOffStart = undefined;
+
+                var absoluteDistances = frequencyScreenMapping.map(y => y / 2);
+
+                console.log(path.start.angle());
+                var rotationMatrix = createRotationMatrix(2 * Math.PI - path.start.angle());
+                // if (path.start.x < 0)
+                //     if (path.start.y < 0)
+                //         rotationMatrix = createRotationMatrix(Math.PI);
+                //     else
+                //         rotationMatrix = createRotationMatrix(3 * Math.PI / 2);
+                // else
+                //     if (path.start.y < 0)
+                //         rotationMatrix = createRotationMatrix(Math.PI / 2);
+                //     else
+                //         rotationMatrix = createRotationMatrix(0);
+
+                path.start.applyMatrix3(rotationMatrix);
+                path.end.applyMatrix3(rotationMatrix);
+
+                if (path.end.x < 0 && path.end.y < 0)
+                    path.end.set(0, 0);
+
+                // var slope = (path.end.y - path.start.y) / (path.end.x - path.start.x);
+                // if (slope > -1) {
+                //     console.log("// panned outward, slope : " + slope);
+                // }
+                // else {
+                //     console.log("// panned inward, slope : " + slope);
+                // }
+
+                var visEq = comp.mainService.getActive();
+                var newValues = [];
+
+                if (path.start.length() < path.end.length()) {
+                    console.log("// panned outward");
+                    for (var n = absoluteDistances.length - 1; n >= 0; --n) {
+                        if (absoluteDistances[n] > path.start.length() && absoluteDistances[n] < path.end.length())
+                            newValues.push(2.0);
+                        else
+                            newValues.push(undefined);
+                    }
+                }
+                else {
+                    console.log("// panned inward");
+                    for (var n = absoluteDistances.length - 1; n >= 0; --n) {
+                        if (absoluteDistances[n] > path.end.length() && absoluteDistances[n] < path.start.length())
+                            newValues.push(-2.0);
+                        else
+                            newValues.push(undefined);
+                    }
+                }
+
+                visEq.deltaFilter(newValues);
+                comp.mainService.trigger("setEqFilters", [visEq._filters]);
+
+                console.log(path);
             }
         });
     }
@@ -389,132 +533,132 @@ export class VisualizerContainerComponent implements AfterViewInit {
     private cameraLookDelta: THREE.Vectoe3 = new THREE.Vector3(0, 0, 0);
     private scrollDelta: number = 0.0;
 
-    @HostListener("document:keydown", ["$event"])
-    public onKeyDown(event: KeyboardEvent) {
-        console.log("Key Down: " + event.key);
-        var newActiveVisualizer = undefined;
+    // @HostListener("document:keydown", ["$event"])
+    // public onKeyDown(event: KeyboardEvent) {
+    //     console.log("Key Down: " + event.key);
+    //     var newActiveVisualizer = undefined;
 
-        switch (event.key) {
-            // case "1":
-            //     newActiveVisualizer = this.visualizersService.createVisualizer("identity", this.scene);
-            //     this.visualizersService.placeOrder(newActiveVisualizer, -2);
-            //     this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
-            //     break;
-            case "2":
-                newActiveVisualizer = this.visualizersService.createVisualizer("eq", this.scene);
-                this.visualizersService.placeOrder(newActiveVisualizer, -2);
-                this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
-                break;
-            case "3":
-                newActiveVisualizer = this.visualizersService.createVisualizer("noise", this.scene);
-                this.visualizersService.placeOrder(newActiveVisualizer, -2);
-                this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
-                break;
-            case "4":
-                newActiveVisualizer = this.visualizersService.createVisualizer("comp", this.scene);
-                this.visualizersService.placeOrder(newActiveVisualizer, -2);
-                this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
-                break;
+    //     switch (event.key) {
+    //         // case "1":
+    //         //     newActiveVisualizer = this.visualizersService.createVisualizer("identity", this.scene);
+    //         //     this.visualizersService.placeOrder(newActiveVisualizer, -2);
+    //         //     this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
+    //         //     break;
+    //         case "2":
+    //             newActiveVisualizer = this.visualizersService.createVisualizer("eq", this.scene);
+    //             this.visualizersService.placeOrder(newActiveVisualizer, -2);
+    //             this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
+    //             break;
+    //         case "3":
+    //             newActiveVisualizer = this.visualizersService.createVisualizer("noise", this.scene);
+    //             this.visualizersService.placeOrder(newActiveVisualizer, -2);
+    //             this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
+    //             break;
+    //         case "4":
+    //             newActiveVisualizer = this.visualizersService.createVisualizer("comp", this.scene);
+    //             this.visualizersService.placeOrder(newActiveVisualizer, -2);
+    //             this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
+    //             break;
 
-            case "[":
-                this.mainService.trigger("onViewChange", ["multi"]);
-                break;
-            case "]":
-                this.mainService.trigger("onViewChange", ["single"]);
-                break;
+    //         case "[":
+    //             this.mainService.trigger("onViewChange", ["multi"]);
+    //             break;
+    //         case "]":
+    //             this.mainService.trigger("onViewChange", ["single"]);
+    //             break;
 
-            case "w":
-                this.cameraMoveDelta.z = -0.08;
-                break;
-            case "a":
-                this.cameraMoveDelta.x = -0.02;
-                break;
-            case "s":
-                this.cameraMoveDelta.z = 0.08;
-                break;
-            case "d":
-                this.cameraMoveDelta.x = 0.02;
-                break;
-            case "q":
-                this.cameraMoveDelta.y = 0.02;
-                break;
-            case "e":
-                this.cameraMoveDelta.y = -0.02;
-                break;
+    //         case "w":
+    //             this.cameraMoveDelta.z = -0.08;
+    //             break;
+    //         case "a":
+    //             this.cameraMoveDelta.x = -0.02;
+    //             break;
+    //         case "s":
+    //             this.cameraMoveDelta.z = 0.08;
+    //             break;
+    //         case "d":
+    //             this.cameraMoveDelta.x = 0.02;
+    //             break;
+    //         case "q":
+    //             this.cameraMoveDelta.y = 0.02;
+    //             break;
+    //         case "e":
+    //             this.cameraMoveDelta.y = -0.02;
+    //             break;
 
-            case "ArrowUp":
-                    // Pitch
-                this.cameraLookDelta.x = 0.01;
-                break;
-            case "ArrowLeft":
-                    // Yaw
-                this.cameraLookDelta.y = 0.01;
-                break;
-            case "ArrowDown":
-                this.cameraLookDelta.x = -0.01;
-                break;
-            case "ArrowRight":
-                this.cameraLookDelta.y = -0.01;
-                break;
+    //         case "ArrowUp":
+    //                 // Pitch
+    //             this.cameraLookDelta.x = 0.01;
+    //             break;
+    //         case "ArrowLeft":
+    //                 // Yaw
+    //             this.cameraLookDelta.y = 0.01;
+    //             break;
+    //         case "ArrowDown":
+    //             this.cameraLookDelta.x = -0.01;
+    //             break;
+    //         case "ArrowRight":
+    //             this.cameraLookDelta.y = -0.01;
+    //             break;
 
-            case "n":
-                if (this.visualizersService.visualizers.length > 2)
-                    this.scrollDelta = 0.08 / this.visualizersService.visualizers.length;
-                break;
-            case "m":
-                if (this.visualizersService.visualizers.length > 2)
-                    this.scrollDelta = -0.08 / this.visualizersService.visualizers.length;
-                break;
-        }
-    }
+    //         case "n":
+    //             if (this.visualizersService.visualizers.length > 2)
+    //                 this.scrollDelta = 0.08 / this.visualizersService.visualizers.length;
+    //             break;
+    //         case "m":
+    //             if (this.visualizersService.visualizers.length > 2)
+    //                 this.scrollDelta = -0.08 / this.visualizersService.visualizers.length;
+    //             break;
+    //     }
+    // }
 
-    @HostListener("document:keyup", ["$event"])
-    public onKeyUp(event: KeyboardEvent) {
-        console.log("Key Up: " + event.key);
+    // @HostListener("document:keyup", ["$event"])
+    // public onKeyUp(event: KeyboardEvent) {
+    //     console.log("Key Up: " + event.key);
 
-        switch (event.key) {
-            case "w":
-                this.cameraMoveDelta.z = 0.0;
-                break;
-            case "a":
-                this.cameraMoveDelta.x = 0.0;
-                break;
-            case "s":
-                this.cameraMoveDelta.z = 0.0;
-                break;
-            case "d":
-                this.cameraMoveDelta.x = 0.0;
-                break;
-            case "q":
-                this.cameraMoveDelta.y = 0.0;
-                break;
-            case "e":
-                this.cameraMoveDelta.y = 0.0;
-                break;
+    //     switch (event.key) {
+    //         case "w":
+    //             this.cameraMoveDelta.z = 0.0;
+    //             break;
+    //         case "a":
+    //             this.cameraMoveDelta.x = 0.0;
+    //             break;
+    //         case "s":
+    //             this.cameraMoveDelta.z = 0.0;
+    //             break;
+    //         case "d":
+    //             this.cameraMoveDelta.x = 0.0;
+    //             break;
+    //         case "q":
+    //             this.cameraMoveDelta.y = 0.0;
+    //             break;
+    //         case "e":
+    //             this.cameraMoveDelta.y = 0.0;
+    //             break;
 
-            case "ArrowUp":
-                    // Pitch
-                this.cameraLookDelta.x = 0.0;
-                break;
-            case "ArrowLeft":
-                    // Yaw
-                this.cameraLookDelta.y = 0.0;
-                break;
-            case "ArrowDown":
-                this.cameraLookDelta.x = 0.0;
-                break;
-            case "ArrowRight":
-                this.cameraLookDelta.y = 0.0;
-                break;
+    //         case "ArrowUp":
+    //                 // Pitch
+    //             this.cameraLookDelta.x = 0.0;
+    //             break;
+    //         case "ArrowLeft":
+    //                 // Yaw
+    //             this.cameraLookDelta.y = 0.0;
+    //             break;
+    //         case "ArrowDown":
+    //             this.cameraLookDelta.x = 0.0;
+    //             break;
+    //         case "ArrowRight":
+    //             this.cameraLookDelta.y = 0.0;
+    //             break;
 
-            case "n":
-                this.scrollDelta = 0.0;
-                break;
-            case "m":
-                this.scrollDelta = 0.0;
-                break;
-        }
-    }
+    //         case "n":
+    //             this.scrollDelta = 0.0;
+    //             break;
+    //         case "m":
+    //             this.scrollDelta = 0.0;
+    //             break;
+    //     }
+    // }
 
     public onMouseDown(event: MouseEvent) {
         console.log("onMouseDown");
@@ -651,6 +795,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.placeVisualizers();
 
         this.setupTouchControls();
+        this.setupVisualizerControls();
 
         this.startRendering();
 
@@ -663,7 +808,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
             const WORLD_YAW_AXIS   = new THREE.Vector3(0, 1, 0);
 
             function updateScene() {
-                rotation += 0.004;
+                rotation += 0.00001;
 
                 var freqValues = [];
                 for (var n = 0; n < 256; ++n)
@@ -673,7 +818,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
                 component.scrollVisualizers += component.scrollDelta;
                 component.scrollVisualizers = component.scrollVisualizers <= 0.0 ? 0.0 : component.scrollVisualizers >= 1.0 ? 1.0 : component.scrollVisualizers;
-                component.placeVisualizers();
+                component.placeVisualizers(rotation);
 
                 component.camera.translateX(component.cameraMoveDelta.x);
                 component.camera.translateY(component.cameraMoveDelta.y);

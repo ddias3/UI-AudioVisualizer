@@ -6,6 +6,8 @@ export class VisualizerNoiseGate {
     private audioCircle: THREE.Mesh;
     private boundingBoxMesh: THREE.Mesh;
 
+    public _threshold: number = 0.0;
+
     constructor(options: Object) {
         function createGateCircle(material: THREE.Material, maxSize: number, minSize: number, maxThickness: number, minThickness: number, resolution: number): THREE.Mesh {
             if (resolution < 3)
@@ -84,6 +86,14 @@ export class VisualizerNoiseGate {
 
     public morphAmplitude(amplitude: number) {
         this.audioCircle.morphTargetInfluences[0] = amplitude;
+    }
+
+    public deltaNoise(threshold) {
+        if (threshold) {
+            this._threshold += threshold;
+            this._threshold = this._threshold <= 0.0 ? 0.0 : this._threshold >= 1.0 ? 1.0 : this._threshold;
+            this.gateCircle.morphTargetInfluences[0] = this._threshold;
+        }
     }
 
     public addToScene(scene: THREE.Scene): void {
