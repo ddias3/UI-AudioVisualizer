@@ -66,7 +66,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         };
     }();
 
-    private placeVisualizers(rotation: number) {
+    private placeVisualizers() {
         var visualizers = this.visualizersService.visualizers;
         var actualSplineT;
 
@@ -818,7 +818,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
                 component.scrollVisualizers += component.scrollDelta;
                 component.scrollVisualizers = component.scrollVisualizers <= 0.0 ? 0.0 : component.scrollVisualizers >= 1.0 ? 1.0 : component.scrollVisualizers;
-                component.placeVisualizers(rotation);
+                component.placeVisualizers();
 
                 component.camera.translateX(component.cameraMoveDelta.x);
                 component.camera.translateY(component.cameraMoveDelta.y);
