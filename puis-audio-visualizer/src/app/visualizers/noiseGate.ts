@@ -4,6 +4,7 @@ import * as util from "./util";
 export class VisualizerNoiseGate {
     private gateCircle: THREE.Mesh;
     private audioCircle: THREE.Mesh;
+    private boundingBoxMesh: THREE.Mesh;
 
     constructor(options: Object) {
         function createGateCircle(material: THREE.Material, maxSize: number, minSize: number, maxThickness: number, minThickness: number, resolution: number): THREE.Mesh {
@@ -73,6 +74,14 @@ export class VisualizerNoiseGate {
                 side : THREE.FrontSide,
                 morphTargets : true
             }), 0.1, 0.1, 3.5, 0.05, 128);
+
+        this.boundingBoxMesh = createGateCircle(new THREE.MeshBasicMaterial({
+                transparent : true,
+                opacity : 0.05,
+                color : 0x0000FF,
+                side : THREE.FrontSide,
+                morphTargets : true
+            }), 0.1, 0.1, 3.5, 3.5, 32);
     }
 
     public morphGate(cutOffVolume: number) {
@@ -98,5 +107,14 @@ export class VisualizerNoiseGate {
     public setPosition(position: THREE.Vector3) {
         this.gateCircle.position.set(position.x, position.y, position.z);
         this.audioCircle.position.set(position.x, position.y, position.z);
+    }
+
+    public getBoundingBox() {
+        this.boundingBoxMesh.geometry.computeBoundingBox();
+        return this.boundingBoxMesh.geometry.boundingBox;
+    }
+
+    public getMatrixWorld() {
+        return this.boundingBoxMesh.matrixWorld;
     }
 }

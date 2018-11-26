@@ -94,4 +94,13 @@ export class VisualizerIdentity {
             this.bars[n].morphTargetInfluences[0] = 1 - normalizedFreqValues[n];
         }
     }
+
+    public getBoundingBox() {
+        this.frame.geometry.computeBoundingBox();
+        return this.frame.geometry.boundingBox;
+    }
+
+    public getMatrixWorld() {
+        return this.frame.matrixWorld;
+    }
 }

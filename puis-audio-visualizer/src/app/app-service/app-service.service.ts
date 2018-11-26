@@ -14,6 +14,8 @@ function processStringFunc(visualizer) {
         return "comp";
     else if (visualizer instanceof VisualizerIdentity)
         return "identity";
+    else
+        return undefined;
 }
 
 @Injectable({
@@ -27,17 +29,32 @@ export class MainService {
     private activeSignalProcess = undefined;
 
     constructor() {
-        var serv = this;
-        this.registerEvent("onViewChange", function (newView) {
-            serv.view = newView;
+        var self = this;
+        self.registerEvent("onViewChange", function (newView) {
+            self.view = newView;
             if (newView === "multi")
-                serv.trigger("setDisplay", ["multi"]);
+                self.trigger("setDisplay", ["multi"]);
             else
-                serv.trigger("setDisplay", [processStringFunc(serv.activeSignalProcess)]);
+                self.trigger("setDisplay", [processStringFunc(self.activeSignalProcess)]);
         });
 
-        this.registerEvent("onActiveChange", function (newActive) {
-            serv.activeSignalProcess = newActive;
+        self.registerEvent("onActiveChange", function (newActive) {
+            self.activeSignalProcess = newActive;
+        });
+
+        self.registerEvent("back", function () {
+            self.trigger("onViewChange", ["multi"]);
+        });
+
+        self.registerEvent("pinch", function (event) {
+            self.trigger("setThreshold", [event, self.activeSignalProcess]);
+        });
+
+        self.registerEvent("rotate", function (event) {
+            if (self.getActiveType() === "eq")
+                self.trigger("setFilter", [event, self.activeSignalProcess]);
+            else if (self.getActiveType() === "comp")
+                self.trigger("setRatio", [event, self.activeSignalProcess]);
         });
     }
 
@@ -58,6 +75,10 @@ export class MainService {
 
     public getActive() {
         return this.activeSignalProcess;
+    }
+
+    public getActiveType() {
+        return processStringFunc(this.activeSignalProcess);
     }
 
     public getView(): string {

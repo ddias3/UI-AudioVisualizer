@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import * as THREE from "three";
 
 import { VisualizerFactory } from "./visualizer-factory.service";
+import { MainService } from "../app-service/app-service.service";
 
 const waveFunc = x => Math.sin(x * Math.PI);
 const waveFuncNeg = x => - 4*x + 4*x*x; // 1 - (2*x - 1) * (2*x - 1)
@@ -206,9 +207,23 @@ export class VisualizersService {
     private _visualizerFactory: VisualizerFactory;
 
     private visualizerFactory: VisualizerFactory;
+    private mainService: MainService;
 
-    constructor(visualizerFactory: VisualizerFactory) {
+    constructor(mainService: MainService, visualizerFactory: VisualizerFactory) {
         this._visualizerFactory = visualizerFactory;
+        this.mainService = mainService;
+
+        this.mainService.registerEvent("setFilter", function (event, visualizer) {
+            console.log("Set Filter for current EQ with this event: " + event);
+        });
+
+        this.mainService.registerEvent("setRatio", function (event, visualizer) {
+            console.log("Set Ratio for current Comp with this event: " + event);
+        });
+
+        this.mainService.registerEvent("setThreshold", function (event, visualizer) {
+            console.log("Set Threshold for current Noise/Comp with this event: " + event);
+        });
     }
 
     public get visualizers(): Array<any> {

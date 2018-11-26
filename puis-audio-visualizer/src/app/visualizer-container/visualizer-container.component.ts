@@ -46,6 +46,8 @@ export class VisualizerContainerComponent implements AfterViewInit {
         }
     };
 
+    private newVisualizersButtons = [];
+
     private pathCurve: THREE.CubicBezierCurve3;
 
     private scrollVisualizers: number = 0.5;
@@ -90,6 +92,9 @@ export class VisualizerContainerComponent implements AfterViewInit {
         for (var n = 0; n < visualizers.length; ++n)
             visualizers[n].setPosition(this.pathCurve.getPoint(actualSplineT[n]));
 
+        if (this.currentDraggingVisualizer)
+            this.currentDraggingVisualizer.setPosition(this.currentDraggedLocation);
+
         if (this.mainService.getView() === "single")
             this.mainService.getActive().setPosition(this.views[this.mainService.getView()].camera.lookAt);
     }
@@ -102,6 +107,12 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.mainService = mainService;
         this.mainService.registerEvent("onViewChange", function (newView) {
             comp.setView(newView);
+        });
+
+        comp.mainService.registerEvent("buttonsLoaded", function (elementEqBox, elementNoiseBox, elementCompBox) {
+            comp.newVisualizersButtons.push(elementEqBox);
+            comp.newVisualizersButtons.push(elementNoiseBox);
+            comp.newVisualizersButtons.push(elementCompBox);
         });
     }
 
@@ -173,7 +184,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.renderer.autoClear = true;
 
         let component: VisualizerContainerComponent = this;
-        (function render() {
+        (function renderLoop() {
             console.log("The Actual Render Call");
             component.render();
         }());
@@ -206,57 +217,147 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.render();
     }
 
+    private currentDraggingVisualizer = undefined;
+    private currentDraggedLocation = new THREE.Vector3();
+    private currentDraggingNewVisualizer = false;
+    private multiViewDrag(event) {
+        var nearPlane = new THREE.Vector3(
+            2 * event.center.x / this.canvas.clientWidth - 1,
+            -(2 * event.center.y / this.canvas.clientHeight - 1),
+            -1
+        ).unproject(this.camera);
+        var farPlane = new THREE.Vector3(
+            2 * event.center.x / this.canvas.clientWidth - 1,
+            -(2 * event.center.y / this.canvas.clientHeight - 1),
+            1
+        ).unproject(this.camera);
+
+        if (!this.currentDraggingNewVisualizer)
+            this.scrollDelta = 0.08 * (-event.deltaX / 300) / this.visualizersService.visualizers.length;
+
+        // var testGeometry = new THREE.Geometry();
+        // testGeometry.vertices.push(nearPlane, farPlane);
+        // this.scene.add(new THREE.Line(testGeometry, new THREE.LineBasicMaterial({ color : 0xFFFFFF })));
+
+        var inverseMatrix = new THREE.Matrix4();
+        var ray = new THREE.Ray();
+
+        var movementPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0));
+        var rotationMatrix = new THREE.Matrix4().makeRotationZ(-Math.PI / 6); //.makeRotationZ(Math.PI / 4);
+        var rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(-Math.PI / 6, Math.PI / 4, 0, "ZYX")); //.makeRotationZ(Math.PI / 4);
+        movementPlane.applyMatrix4(rotationMatrix);
+        movementPlane.intersectLine(new THREE.Line3(nearPlane, farPlane), this.currentDraggedLocation);
+    }
+
+    private checkDraggingFromButtons(event) {
+        var newVisualizer = undefined;
+        for (var n = 0; n < this.newVisualizersButtons.length; ++n) {
+            var currentButtonRect = this.newVisualizersButtons[n];
+            if (event.center.x > currentButtonRect.x && event.center.x < currentButtonRect.right
+                && event.center.y > currentButtonRect.y && event.center.y < currentButtonRect.bottom) {
+                switch (n) {
+                    case 0:
+                        newVisualizer = this.visualizersService.createVisualizer("eq", this.scene);
+                        break;
+                    case 1:
+                        newVisualizer = this.visualizersService.createVisualizer("noise", this.scene);
+                        break;
+                    case 2:
+                        newVisualizer = this.visualizersService.createVisualizer("comp", this.scene);
+                        break;
+                }
+                this.visualizersService.placeOrder(newVisualizer, -2);
+                this.mainService.trigger("onActiveChange", [newVisualizer]);
+            }
+        }
+        return newVisualizer;
+    }
+
     private setupTouchControls() {
         var comp = this;
         comp.hammerInstance = new Hammer(document.body);
         comp.hammerInstance.get("rotate").set({ enable : true });
         comp.hammerInstance.get("pinch").set({ enable : true });
         comp.hammerInstance.add(new Hammer.Pan({ direction : Hammer.DIRECTION_ALL, threshold : 0 }));
+        comp.hammerInstance.add(new Hammer.Swipe({ direction : Hammer.DIRECTION_HORIZONTAL }));
+        comp.hammerInstance.get("swipe").recognizeWith(comp.hammerInstance.get("pan"));
 
-        comp.hammerInstance.on("tap", function test(event) {
-            console.log(event.type);
+        comp.hammerInstance.on("swipeleft", function back(event) {
+            console.log("swipeleft");
             switch (comp.mainService.getView()) {
-                case "eq":
-                case "noise":
-                case "comp":
-                    comp.mainService.trigger("back", [event]);
+                case "single":
+                    if (event.distance > 0.7 * comp.canvas.clientWidth)
+                        comp.mainService.trigger("back", []);
                     break;
             }
         });
 
-        comp.hammerInstance.on("pan", function clickAndDrag(event) {
+        comp.hammerInstance.on("panend", function clickAndDrag(event) {
             console.log("(" + event.deltaX + ", " + event.deltaY + ")");
             switch (comp.mainService.getView()) {
                 case "multi":
-                    comp.mainService.trigger("drag", [event]);
+                    comp.currentDraggingVisualizer = undefined;
+                    comp.scrollDelta = 0.0;
+                    comp.currentDraggingNewVisualizer = false;
                     break;
             }
         });
 
-        comp.hammerInstance.on("swipe", function swipe(event) {
+        comp.hammerInstance.on("panstart", function clickAndDrag(event) {
+            console.log("[ event started at (" + event.center.x + ", " + event.center.y + ")]");
+            console.log("(" + event.deltaX + ", " + event.deltaY + ")");
             switch (comp.mainService.getView()) {
                 case "multi":
-                    comp.mainService.trigger("swipe", [event]);
+                    if (comp.currentDraggingVisualizer === undefined) {
+                        var newVisualizer = undefined;
+                        if ((newVisualizer = comp.checkDraggingFromButtons(event)) !== undefined) {
+                            comp.currentDraggingVisualizer = newVisualizer;
+                            comp.currentDraggingNewVisualizer = true;
+                        }
+                        else {
+                            let visualizers = comp.visualizersService.visualizers;
+                            let inverseMatrix = new THREE.Matrix4();
+                            let ray = new THREE.Ray();
+                            let raycaster = new THREE.Raycaster();
+
+                            raycaster.setFromCamera(new THREE.Vector2(2 * event.center.x / comp.canvas.clientWidth - 1, -(2 * event.center.y / comp.canvas.clientHeight - 1)), comp.camera);
+
+                            for (let n = visualizers.length - 1; n >= 0; --n) {
+                                inverseMatrix.getInverse(visualizers[n].getMatrixWorld());
+                                ray.copy(raycaster.ray).applyMatrix4(inverseMatrix);
+
+                                if (ray.intersectsBox(visualizers[n].getBoundingBox()) === true) {
+                                    comp.currentDraggingVisualizer = visualizers[n];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    break;
+            }
+        });
+
+        comp.hammerInstance.on("panmove", function clickAndDrag(event) {
+            console.log("(" + event.deltaX + ", " + event.deltaY + ")");
+            switch (comp.mainService.getView()) {
+                case "multi":
+                    comp.multiViewDrag(event);
                     break;
             }
         });
 
         comp.hammerInstance.on("rotate", function twoFingerRotate(event) {
             switch (comp.mainService.getView()) {
-                case "eq":
-                    comp.mainService.trigger("setFilter", [event]);
-                    break;
-                case "comp":
-                    comp.mainService.trigger("setRatio", [event]);
+                case "single":
+                    comp.mainService.trigger("rotate", [event]);
                     break;
             }
         });
 
         comp.hammerInstance.on("pinch", function twoFingerZoom(event) {
             switch (comp.mainService.getView()) {
-                case "noise":
-                case "comp":
-                    comp.mainService.trigger("setThreshold", [event]);
+                case "single":
+                    comp.mainService.trigger("pinch", [event]);
                     break;
             }
         });
@@ -272,11 +373,11 @@ export class VisualizerContainerComponent implements AfterViewInit {
         var newActiveVisualizer = undefined;
 
         switch (event.key) {
-            case "1":
-                newActiveVisualizer = this.visualizersService.createVisualizer("identity", this.scene);
-                this.visualizersService.placeOrder(newActiveVisualizer, -2);
-                this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
-                break;
+            // case "1":
+            //     newActiveVisualizer = this.visualizersService.createVisualizer("identity", this.scene);
+            //     this.visualizersService.placeOrder(newActiveVisualizer, -2);
+            //     this.mainService.trigger("onActiveChange", [newActiveVisualizer]);
+            //     break;
             case "2":
                 newActiveVisualizer = this.visualizersService.createVisualizer("eq", this.scene);
                 this.visualizersService.placeOrder(newActiveVisualizer, -2);
@@ -336,11 +437,11 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
             case "n":
                 if (this.visualizersService.visualizers.length > 2)
-                    this.scrollDelta = 0.04 / this.visualizersService.visualizers.length;
+                    this.scrollDelta = 0.08 / this.visualizersService.visualizers.length;
                 break;
             case "m":
                 if (this.visualizersService.visualizers.length > 2)
-                    this.scrollDelta = -0.04 / this.visualizersService.visualizers.length;
+                    this.scrollDelta = -0.08 / this.visualizersService.visualizers.length;
                 break;
         }
     }
@@ -516,7 +617,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         }
 
         // testEQVisualizer();
-        testCameraControls();
+        // testCameraControls();
     }
 
     ngAfterViewInit() {
@@ -530,5 +631,43 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.setupTouchControls();
 
         this.startRendering();
+
+        var rotation = 0;
+        var component = this;
+
+        function animationLoop() {
+
+            const WORLD_PITCH_AXIS = new THREE.Vector3(1, 0, 0);
+            const WORLD_YAW_AXIS   = new THREE.Vector3(0, 1, 0);
+
+            function updateScene() {
+                rotation += 0.004;
+
+                var freqValues = [];
+                for (var n = 0; n < 256; ++n)
+                    freqValues.push(Math.random());
+
+                component.visualizersService.updateVisualizers(Math.random(), freqValues);
+
+                component.scrollVisualizers += component.scrollDelta;
+                component.scrollVisualizers = component.scrollVisualizers <= 0.0 ? 0.0 : component.scrollVisualizers >= 1.0 ? 1.0 : component.scrollVisualizers;
+                component.placeVisualizers();
+
+                component.camera.translateX(component.cameraMoveDelta.x);
+                component.camera.translateY(component.cameraMoveDelta.y);
+                component.camera.translateZ(component.cameraMoveDelta.z);
+
+                component.camera.rotateOnWorldAxis(WORLD_YAW_AXIS, component.cameraLookDelta.y);
+                component.camera.rotateOnAxis(WORLD_PITCH_AXIS, component.cameraLookDelta.x);
+
+                component.render();
+
+                requestAnimationFrame(updateScene);
+            }
+
+            updateScene();
+        }
+
+        animationLoop();
     }
 }

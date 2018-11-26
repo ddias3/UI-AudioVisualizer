@@ -78,4 +78,13 @@ export class VisualizerEQ {
             for (var m = 0; m < this.waves[n].length; ++m)
                 this.waves[n][m].position.set(position.x, position.y, position.z);
     }
+
+    public getBoundingBox() {
+        this.circles[0].geometry.computeBoundingBox();
+        return this.circles[0].geometry.boundingBox;
+    }
+
+    public getMatrixWorld() {
+        return this.circles[0].matrixWorld;
+    }
 }
