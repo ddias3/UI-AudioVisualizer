@@ -95,7 +95,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         if (this.currentDraggingVisualizer)
             this.currentDraggingVisualizer.setPosition(this.currentDraggedLocation);
 
-        if (this.mainService.getView() === "single")
+        if (this.mainService.getView() === "single" && this.mainService.getActive())
             this.mainService.getActive().setPosition(this.views[this.mainService.getView()].camera.lookAt);
     }
 
@@ -231,7 +231,6 @@ export class VisualizerContainerComponent implements AfterViewInit {
             this.currentDraggingLeftButton = true;
         }
         else if (event.center.x < 20 && this.currentDraggingLeftButton) {
-            console.log("REMOVE VISUALIZER");
             this.visualizersService.removeVisualizer(this.currentDraggingVisualizer, this.scene);
             this.currentDraggingVisualizer = undefined;
             this.mainService.trigger("setActive", [this.currentDraggingVisualizer]);

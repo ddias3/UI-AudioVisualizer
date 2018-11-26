@@ -26,6 +26,7 @@ export class InfoContainerComponent implements AfterViewInit {
         this.mainService = mainService;
 
         mainService.registerEvent("setDisplay", displayValue => {
+            console.log("new display = " + displayValue);
             this.display = displayValue;
         });
     }

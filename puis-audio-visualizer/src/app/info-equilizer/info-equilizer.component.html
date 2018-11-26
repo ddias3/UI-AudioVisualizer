@@ -1,3 +1,5 @@
-<p>
-  info-equilizer works!
-</p>
+<div>
+    <li *ngFor="let currFilter of frequencyFilters">
+        <span>Frequency: {{currFilter.frequency}}, filter value: {{currFilter.filterValue}}</span>
+    </li>
+</div>
