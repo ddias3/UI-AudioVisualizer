@@ -47,29 +47,42 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
     private scrollVisualizers: number = 0.5;
     private spacingFunc = function () {
-        const point0 = new THREE.Vector2(-1.0, 0.0);
-        const point1 = new THREE.Vector2(0.4, 0.15);
-        const point2 = new THREE.Vector2(0.6, 0.85);
-        const point3 = new THREE.Vector2(2.0, 1.0);
+        const point0 = new THREE.Vector2(-1.5, 0.0);
+        const point1 = new THREE.Vector2(-0.5, 0.1);
+        const point2 = new THREE.Vector2(0.5, 0.9);
+        const point3 = new THREE.Vector2(1.5, 1.0);
         return x => {
             if (x < point1.x)
                 return (point1.y - point0.y) / (point1.x - point0.x) * (x - point0.x) + point0.y;
             else if (x < point2.x)
                 return (point2.y - point1.y) / (point2.x - point1.x) * (x - point1.x) + point1.y;
             else
-                return (point3.y - point2.y) / (point3.x - point2.x) * (x - point1.x) + point2.y;
+                return (point3.y - point2.y) / (point3.x - point2.x) * (x - point2.x) + point2.y;
         };
     }();
 
     private placeVisualizers() {
         var visualizers = this.visualizersService.visualizers;
-        var splineT = [];
-        for (var n = 0; n < visualizers.length; ++n)
-            splineT.push(n / visualizers.length);
+        var actualSplineT;
 
-        var actualSplineT = [];
-        for (var n = 0; n < visualizers.length; ++n)
-            actualSplineT.push(this.spacingFunc((n / visualizers.length) + 2 * this.scrollVisualizers - 0.5));
+        if (visualizers.length > 3) {
+            var splineT = [];
+            for (var n = 0; n < visualizers.length; ++n)
+                splineT.push(n);
+
+            var windowMoveDistance = splineT.length - 3;
+            var windowLocation = this.scrollVisualizers * windowMoveDistance;
+
+            actualSplineT = [];
+            for (var n = 0; n < visualizers.length; ++n)
+                actualSplineT.push(this.spacingFunc(0.5 * (splineT[n] - windowLocation - 1)));
+        }
+        else if (visualizers.length > 2) {
+            actualSplineT = [ this.spacingFunc(-0.5), this.spacingFunc(0.0), this.spacingFunc(0.5) ];
+        }
+        else {
+            actualSplineT = [ this.spacingFunc(0.0), this.spacingFunc(100) ];
+        }
 
         for (var n = 0; n < visualizers.length; ++n)
             visualizers[n].setPosition(this.pathCurve.getPoint(actualSplineT[n]));
@@ -263,10 +276,10 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 break;
 
             case "n":
-                this.scrollDelta = 0.004;
+                this.scrollDelta = 0.008;
                 break;
             case "m":
-                this.scrollDelta = -0.004;
+                this.scrollDelta = -0.008;
                 break;
         }
     }
