@@ -75,13 +75,7 @@ export class VisualizerNoiseGate {
                 morphTargets : true
             }), 0.1, 0.1, 3.5, 0.05, 128);
 
-        this.boundingBoxMesh = createGateCircle(new THREE.MeshBasicMaterial({
-                transparent : true,
-                opacity : 0.05,
-                color : 0x0000FF,
-                side : THREE.FrontSide,
-                morphTargets : true
-            }), 0.1, 0.1, 3.5, 3.5, 32);
+        this.boundingBoxMesh = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 0.05), new THREE.MeshBasicMaterial({ transparent : true, opacity : 0.0 }));
     }
 
     public morphGate(cutOffVolume: number) {
@@ -95,18 +89,22 @@ export class VisualizerNoiseGate {
     public addToScene(scene: THREE.Scene): void {
         scene.add(this.gateCircle);
         scene.add(this.audioCircle);
+        scene.add(this.boundingBoxMesh);
     }
 
     public removeFromScene(scene: THREE.Scene): void {
         scene.remove(this.gateCircle);
         scene.remove(this.audioCircle);
+        scene.remove(this.boundingBoxMesh);
         this.gateCircle.geometry.dispose();
         this.audioCircle.geometry.dispose();
+        this.boundingBoxMesh.geometry.dispose();
     }
 
     public setPosition(position: THREE.Vector3) {
         this.gateCircle.position.set(position.x, position.y, position.z);
         this.audioCircle.position.set(position.x, position.y, position.z);
+        this.boundingBoxMesh.position.set(position.x, position.y, position.z);
     }
 
     public getBoundingBox() {

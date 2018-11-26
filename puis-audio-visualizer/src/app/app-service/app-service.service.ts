@@ -56,6 +56,10 @@ export class MainService {
             else if (self.getActiveType() === "comp")
                 self.trigger("setRatio", [event, self.activeSignalProcess]);
         });
+
+        self.registerEvent("setActive", function (activeVisualizer) {
+            self.activeSignalProcess = activeVisualizer;
+        });
     }
 
     public registerEvent(eventName: string, callback) {

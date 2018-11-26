@@ -283,6 +283,21 @@ export class VisualizersService {
         }
     }
 
+    public removeVisualizer(visualizer, scene) {
+        var index = -1;
+        for (var n = 0; n < this._visualizers.length; ++n) {
+            if (visualizer === this._visualizers[n]) {
+                index = n;
+                break;
+            }
+        }
+
+        if (index > -1) {
+            this._visualizers[index].removeFromScene(scene);
+            this._visualizers.splice(index, 1);
+        }
+    }
+
     // public populateScene() {
     //     this.testVisualizer0 = this.visualizerFactory.eq({}, this.CIRCLES, this.WAVES);
     //     this.testVisualizer0.addToScene(this.scene);

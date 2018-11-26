@@ -106,7 +106,12 @@ export class VisualizerContainerComponent implements AfterViewInit {
         var comp = this;
         this.mainService = mainService;
         this.mainService.registerEvent("onViewChange", function (newView) {
+            comp.currentDraggingVisualizer = undefined;
+            comp.scrollDelta = 0.0;
+            comp.currentDraggingNewVisualizer = false;
+            comp.currentDraggingLeftButton = false;
             comp.setView(newView);
+            comp.placeVisualizers();
         });
 
         comp.mainService.registerEvent("buttonsLoaded", function (elementEqBox, elementNoiseBox, elementCompBox) {
@@ -220,33 +225,49 @@ export class VisualizerContainerComponent implements AfterViewInit {
     private currentDraggingVisualizer = undefined;
     private currentDraggedLocation = new THREE.Vector3();
     private currentDraggingNewVisualizer = false;
+    private currentDraggingLeftButton = false;
     private multiViewDrag(event) {
-        var nearPlane = new THREE.Vector3(
-            2 * event.center.x / this.canvas.clientWidth - 1,
-            -(2 * event.center.y / this.canvas.clientHeight - 1),
-            -1
-        ).unproject(this.camera);
-        var farPlane = new THREE.Vector3(
-            2 * event.center.x / this.canvas.clientWidth - 1,
-            -(2 * event.center.y / this.canvas.clientHeight - 1),
-            1
-        ).unproject(this.camera);
+        if (!this.currentDraggingLeftButton && event.center.x > this.newVisualizersButtons[0].right) {
+            this.currentDraggingLeftButton = true;
+        }
+        else if (event.center.x < 20 && this.currentDraggingLeftButton) {
+            console.log("REMOVE VISUALIZER");
+            this.visualizersService.removeVisualizer(this.currentDraggingVisualizer, this.scene);
+            this.currentDraggingVisualizer = undefined;
+            this.mainService.trigger("setActive", [this.currentDraggingVisualizer]);
+        }
+        else if (event.center.y < 10) {
+            this.mainService.trigger("setActive", [this.currentDraggingVisualizer]);
+            this.mainService.trigger("onViewChange", ["single"]);
+        }
+        else {
+            var nearPlane = new THREE.Vector3(
+                2 * event.center.x / this.canvas.clientWidth - 1,
+                -(2 * event.center.y / this.canvas.clientHeight - 1),
+                -1
+            ).unproject(this.camera);
+            var farPlane = new THREE.Vector3(
+                2 * event.center.x / this.canvas.clientWidth - 1,
+                -(2 * event.center.y / this.canvas.clientHeight - 1),
+                1
+            ).unproject(this.camera);
 
-        if (!this.currentDraggingNewVisualizer)
-            this.scrollDelta = 0.08 * (-event.deltaX / 300) / this.visualizersService.visualizers.length;
+            if (!this.currentDraggingNewVisualizer)
+                this.scrollDelta = 0.08 * (-event.deltaX / 300) / this.visualizersService.visualizers.length;
 
-        // var testGeometry = new THREE.Geometry();
-        // testGeometry.vertices.push(nearPlane, farPlane);
-        // this.scene.add(new THREE.Line(testGeometry, new THREE.LineBasicMaterial({ color : 0xFFFFFF })));
+            // var testGeometry = new THREE.Geometry();
+            // testGeometry.vertices.push(nearPlane, farPlane);
+            // this.scene.add(new THREE.Line(testGeometry, new THREE.LineBasicMaterial({ color : 0xFFFFFF })));
 
-        var inverseMatrix = new THREE.Matrix4();
-        var ray = new THREE.Ray();
+            var inverseMatrix = new THREE.Matrix4();
+            var ray = new THREE.Ray();
 
-        var movementPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0));
-        var rotationMatrix = new THREE.Matrix4().makeRotationZ(-Math.PI / 6); //.makeRotationZ(Math.PI / 4);
-        var rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(-Math.PI / 6, Math.PI / 4, 0, "ZYX")); //.makeRotationZ(Math.PI / 4);
-        movementPlane.applyMatrix4(rotationMatrix);
-        movementPlane.intersectLine(new THREE.Line3(nearPlane, farPlane), this.currentDraggedLocation);
+            var movementPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0));
+            var rotationMatrix = new THREE.Matrix4().makeRotationZ(-Math.PI / 6); //.makeRotationZ(Math.PI / 4);
+            var rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(-Math.PI / 6, Math.PI / 4, 0, "ZYX")); //.makeRotationZ(Math.PI / 4);
+            movementPlane.applyMatrix4(rotationMatrix);
+            movementPlane.intersectLine(new THREE.Line3(nearPlane, farPlane), this.currentDraggedLocation);
+        }
     }
 
     private checkDraggingFromButtons(event) {
@@ -286,8 +307,9 @@ export class VisualizerContainerComponent implements AfterViewInit {
             console.log("swipeleft");
             switch (comp.mainService.getView()) {
                 case "single":
-                    if (event.distance > 0.7 * comp.canvas.clientWidth)
+                    if (event.distance > 0.7 * comp.canvas.clientWidth) {
                         comp.mainService.trigger("back", []);
+                    }
                     break;
             }
         });
@@ -299,6 +321,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
                     comp.currentDraggingVisualizer = undefined;
                     comp.scrollDelta = 0.0;
                     comp.currentDraggingNewVisualizer = false;
+                    comp.currentDraggingLeftButton = false;
                     break;
             }
         });

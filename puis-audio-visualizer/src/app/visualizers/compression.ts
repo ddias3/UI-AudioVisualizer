@@ -137,15 +137,9 @@ export class VisualizerCompression {
                 morphTargets : true
             }), 0.1, 0.1, 3.5, 0.05, 128);
 
-        this.boundingBoxMesh = createThresholdCircle(new THREE.MeshBasicMaterial({
-                transparent : true,
-                opacity : 0.5,
-                color : 0xFFFF00,
-                side : THREE.FrontSide,
-                morphTargets : true
-            }), 1.6, 1.6, 0.05, 0.05, 128);
+        this.boundingBoxMesh = new THREE.Mesh(new THREE.BoxGeometry(5, 5, 0.05), new THREE.MeshBasicMaterial({ transparent : true, opacity : 0.0 }));
 
-        this.thresholdCircle.morphTargetInfluences[0] = 1.0; // thickness, i.e. ratio
+        this.thresholdCircle.morphTargetInfluences[0] = 0.50; // thickness, i.e. ratio
         this.thresholdCircle.morphTargetInfluences[1] = 1.0; // size, i.e. threshold
         this.thresholdCircle.morphTargetInfluences[2] = 0.0; // thickness and size, i.e. it's the first 2 together
     }
@@ -162,18 +156,22 @@ export class VisualizerCompression {
     public addToScene(scene: THREE.Scene): void {
         scene.add(this.thresholdCircle);
         scene.add(this.audioCircle);
+        scene.add(this.boundingBoxMesh);
     }
 
     public removeFromScene(scene: THREE.Scene): void {
         scene.remove(this.thresholdCircle);
         scene.remove(this.audioCircle);
+        scene.remove(this.boundingBoxMesh);
         this.thresholdCircle.geometry.dispose();
         this.audioCircle.geometry.dispose();
+        this.boundingBoxMesh.geometry.dispose();
     }
 
     public setPosition(position: THREE.Vector3) {
         this.thresholdCircle.position.set(position.x, position.y, position.z);
         this.audioCircle.position.set(position.x, position.y, position.z);
+        this.boundingBoxMesh.position.set(position.x, position.y, position.z);
     }
 
     public getBoundingBox() {
