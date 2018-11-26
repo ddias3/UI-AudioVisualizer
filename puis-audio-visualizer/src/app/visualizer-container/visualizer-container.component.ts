@@ -1,5 +1,6 @@
 import { Component, HostListener, ViewChild, AfterViewInit, ElementRef } from '@angular/core';
 import * as THREE from 'three';
+import * as Hammer from "hammerjs";
 
 import { VisualizersService } from "../visualizers/visualizers.service";
 import { MainService } from "../app-service/app-service.service";
@@ -23,6 +24,8 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
     private mainService: MainService;
     private visualizersService: VisualizersService;
+
+    private hammerInstance: Hammer;
 
     private views = {
         multi : {
@@ -87,8 +90,8 @@ export class VisualizerContainerComponent implements AfterViewInit {
         for (var n = 0; n < visualizers.length; ++n)
             visualizers[n].setPosition(this.pathCurve.getPoint(actualSplineT[n]));
 
-        if (this.mainService.getData("view") === "single")
-            this.mainService.getData("active").setPosition(this.views[this.mainService.getData("view")].camera.lookAt);        
+        if (this.mainService.getView() === "single")
+            this.mainService.getActive().setPosition(this.views[this.mainService.getView()].camera.lookAt);
     }
 
     constructor(mainService: MainService, visualizersService: VisualizersService) {
@@ -188,7 +191,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.camera.position.set(this.views[viewId].camera.location.x, this.views[viewId].camera.location.y, this.views[viewId].camera.location.z);
         this.camera.lookAt(this.views[viewId].camera.lookAt);
 
-        this.views[viewId].userActiveVisualizer = this.mainService.getData("active");
+        this.views[viewId].userActiveVisualizer = this.mainService.getActive();
     }
 
     @HostListener("window:resize", ["$event"])
@@ -201,6 +204,62 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
         this.render();
+    }
+
+    private setupTouchControls() {
+        var comp = this;
+        comp.hammerInstance = new Hammer(document.body);
+        comp.hammerInstance.get("rotate").set({ enable : true });
+        comp.hammerInstance.get("pinch").set({ enable : true });
+        comp.hammerInstance.add(new Hammer.Pan({ direction : Hammer.DIRECTION_ALL, threshold : 0 }));
+
+        comp.hammerInstance.on("tap", function test(event) {
+            console.log(event.type);
+            switch (comp.mainService.getView()) {
+                case "eq":
+                case "noise":
+                case "comp":
+                    comp.mainService.trigger("back", [event]);
+                    break;
+            }
+        });
+
+        comp.hammerInstance.on("pan", function clickAndDrag(event) {
+            console.log("(" + event.deltaX + ", " + event.deltaY + ")");
+            switch (comp.mainService.getView()) {
+                case "multi":
+                    comp.mainService.trigger("drag", [event]);
+                    break;
+            }
+        });
+
+        comp.hammerInstance.on("swipe", function swipe(event) {
+            switch (comp.mainService.getView()) {
+                case "multi":
+                    comp.mainService.trigger("swipe", [event]);
+                    break;
+            }
+        });
+
+        comp.hammerInstance.on("rotate", function twoFingerRotate(event) {
+            switch (comp.mainService.getView()) {
+                case "eq":
+                    comp.mainService.trigger("setFilter", [event]);
+                    break;
+                case "comp":
+                    comp.mainService.trigger("setRatio", [event]);
+                    break;
+            }
+        });
+
+        comp.hammerInstance.on("pinch", function twoFingerZoom(event) {
+            switch (comp.mainService.getView()) {
+                case "noise":
+                case "comp":
+                    comp.mainService.trigger("setThreshold", [event]);
+                    break;
+            }
+        });
     }
 
     private cameraMoveDelta: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
@@ -276,10 +335,12 @@ export class VisualizerContainerComponent implements AfterViewInit {
                 break;
 
             case "n":
-                this.scrollDelta = 0.008;
+                if (this.visualizersService.visualizers.length > 2)
+                    this.scrollDelta = 0.04 / this.visualizersService.visualizers.length;
                 break;
             case "m":
-                this.scrollDelta = -0.008;
+                if (this.visualizersService.visualizers.length > 2)
+                    this.scrollDelta = -0.04 / this.visualizersService.visualizers.length;
                 break;
         }
     }
@@ -463,8 +524,10 @@ export class VisualizerContainerComponent implements AfterViewInit {
         this.createLight();
         this.createCamera();
 
-        this.setView(this.mainService.getData("view"));
+        this.setView(this.mainService.getView());
         this.placeVisualizers();
+
+        this.setupTouchControls();
 
         this.startRendering();
     }

@@ -56,12 +56,11 @@ export class MainService {
         }
     }
 
-    public getData(dataId: string) {
-        switch (dataId) {
-            case "view":
-                return this.view;
-            case "active":
-                return this.activeSignalProcess;
-        }
+    public getActive() {
+        return this.activeSignalProcess;
+    }
+
+    public getView(): string {
+        return this.view;
     }
 }
