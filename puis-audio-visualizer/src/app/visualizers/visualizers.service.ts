@@ -265,13 +265,13 @@ export class VisualizersService {
         this._visualizers.splice(newPlacement, 0, this._visualizers.splice(oldIndex, 1)[0]);
     }
 
-    public updateVisualizers(amplitude: number, freqValues: number[]) {
+    public updateVisualizers(amplitude, freqValues) {
         var normalizedFreqValues12 = [];
         for (var n = 0; n < 12; ++n)
-            normalizedFreqValues12.push(freqValues[n * Math.floor(freqValues.length / 16)]);
+            normalizedFreqValues12.push(freqValues[n * Math.floor(freqValues.length / 16)] / 250);
         var freqValues32 = [];
         for (var n = 0; n < 32; ++n)
-            freqValues32.push(freqValues[n * Math.floor(freqValues.length / 36)]);
+            freqValues32.push(freqValues[n * Math.floor(freqValues.length / 36)] / 250);
 
         for (var n = 0; n < this._visualizers.length; ++n) {
             if (this._visualizers[n].morphAmplitude)

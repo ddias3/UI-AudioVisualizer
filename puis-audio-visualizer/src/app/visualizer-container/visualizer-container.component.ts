@@ -689,6 +689,7 @@ export class VisualizerContainerComponent implements AfterViewInit {
         //                        6, 5, 4, 3, 2, 1,
         //                        6, 5, 4, 3].map(x => Math.random() * x));
 
+        var playingAudio = false;
         function testEQVisualizer() {
             // let audio = new Audio("../../assets/FastVer01_stems_Bass.wav");
             let audio = new Audio("../../assets/ChaseMusic_mixAndMaster.mp3");
@@ -782,7 +783,8 @@ export class VisualizerContainerComponent implements AfterViewInit {
             updateScene();
         }
 
-        // testEQVisualizer();
+        if (!playAudio)
+            testEQVisualizer();
         // testCameraControls();
     }
 
@@ -807,14 +809,29 @@ export class VisualizerContainerComponent implements AfterViewInit {
             const WORLD_PITCH_AXIS = new THREE.Vector3(1, 0, 0);
             const WORLD_YAW_AXIS   = new THREE.Vector3(0, 1, 0);
 
+            let audio = new Audio("../../assets/ChaseMusic_mixAndMaster.mp3");
+            // let audio = new Audio("../../assets/01-White-Noise-10min.mp3");
+            audio.load();
+
+            var audioContext = new AudioContext();
+            var mediaElementSrc = audioContext.createMediaElementSource(audio);
+            var analyser = audioContext.createAnalyser();
+
+            mediaElementSrc.connect(analyser);
+            analyser.connect(audioContext.destination);
+
+            analyser.fftSize = 512;
+
+            var dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+            console.log(analyser.frequencyBinCount);
+
+            audio.play();
+
             function updateScene() {
-                rotation += 0.00001;
 
-                var freqValues = [];
-                for (var n = 0; n < 256; ++n)
-                    freqValues.push(Math.random());
-
-                component.visualizersService.updateVisualizers(Math.random(), freqValues);
+                analyser.getByteFrequencyData(dataArray);
+                component.visualizersService.updateVisualizers(dataArray[24] / 250, dataArray);
 
                 component.scrollVisualizers += component.scrollDelta;
                 component.scrollVisualizers = component.scrollVisualizers <= 0.0 ? 0.0 : component.scrollVisualizers >= 1.0 ? 1.0 : component.scrollVisualizers;
@@ -829,6 +846,8 @@ export class VisualizerContainerComponent implements AfterViewInit {
 
                 component.render();
 
+                if (audio.ended)
+                    audio.play();
                 requestAnimationFrame(updateScene);
             }
 
